@@ -295,9 +295,8 @@ Remove-Item Env:DASHSCOPE_API_KEY -ErrorAction SilentlyContinue
 Remove-Item Env:QWEN_API_KEY -ErrorAction SilentlyContinue
 Remove-Item Env:ALIYUN_API_KEY -ErrorAction SilentlyContinue
 
-$rootBase = Join-Path (Split-Path -Parent $PSScriptRoot) "qwen-sessions\_dynamic"
-$slug = "{0}-{1}" -f $Provider, (Get-SafeDirName $ModelId)
-$sessionRoot = Join-Path $rootBase $slug
+$rootBase = Join-Path (Split-Path -Parent $PSScriptRoot) "qwen-sessions\_shared"
+$sessionRoot = $rootBase
 $qwenDir = Join-Path $sessionRoot ".qwen"
 if (-not (Test-Path -LiteralPath $qwenDir)) {
   New-Item -ItemType Directory -Path $qwenDir -Force | Out-Null
@@ -399,8 +398,9 @@ if (-not $qwenExe) {
 }
 
 Write-Host ("Qwen Code: {0} / модель {1} → {2}" -f $Provider, $ModelId, $sessionRoot) -ForegroundColor Cyan
+Write-Host ("Все сессии /resume в едином пространстве (смена модели сохраняет историю)." -f "") -ForegroundColor DarkGray
 if ($Provider -eq "nim" -and $script:NimDynamicCompat -and $script:NimCompatLimits) {
-  Write-Host ("NIM (динамика): прокси string-content, skipStartupContext, tier={0} ctx={1} max_out={2} (см. settings.json)." -f $script:NimCompatLimits.Tier, $script:NimCompatLimits.ContextWindowSize, $script:NimCompatLimits.MaxTokens) -ForegroundColor DarkCyan
+  Write-Host ("NIM (динамика): прокси string-content, skipStartupContext, tier={0} ctx={1} max_out={2}." -f $script:NimCompatLimits.Tier, $script:NimCompatLimits.ContextWindowSize, $script:NimCompatLimits.MaxTokens) -ForegroundColor DarkCyan
 }
 
 Push-Location $sessionRoot

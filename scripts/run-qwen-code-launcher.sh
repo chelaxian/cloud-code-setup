@@ -228,13 +228,13 @@ invoke_qwen_profile() {
     
     case "$profile_id" in
         "nim-glm")
-            bash "$SCRIPT_DIR/run-qwen-code-nvidia-nim.sh" -Model "nim-glm-4.7-tools"
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider nim -ModelId "nim-glm-4.7-tools"
             ;;
         "nim-qwen")
-            bash "$SCRIPT_DIR/run-qwen-code-nvidia-nim.sh" -Model "nim-qwen3.5-122b-a10b-tools"
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider nim -ModelId "nim-qwen3.5-122b-a10b-tools"
             ;;
         "zai-glm")
-            bash "$SCRIPT_DIR/run-qwen-code-cloud-zai-glm47.sh"
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-4.7"
             ;;
         "zai-glm51")
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-5.1"

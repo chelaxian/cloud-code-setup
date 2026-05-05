@@ -84,7 +84,7 @@ if [ -z "$API_KEY" ]; then
 fi
 
 # ── Создаём сессионную директорию ──
-SESSION_ROOT="$SCRIPT_DIR/../qwen-sessions/_dynamic/$SESSION_DIR_NAME"
+SESSION_ROOT="$SCRIPT_DIR/../qwen-sessions/_shared"
 QWEN_DIR="$SESSION_ROOT/.qwen"
 mkdir -p "$QWEN_DIR"
 
