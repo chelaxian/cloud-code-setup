@@ -21,8 +21,6 @@ PROFILES=(
     "claude-zai-glm51|Z.AI — GLM-5.1 (free, tool calling)"
     "claude-nim|NVIDIA NIM — GLM-4.7 (free, tool calling)"
     "claude-nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
-    "claude-groq-llama|Groq — Llama 3.3 70B (free, tool calling)"
-    "claude-groq-qwen|Groq — Qwen3 32B (free, tool calling)"
     "claude-openrouter-sonnet|OpenRouter — Claude Sonnet 4 (paid, tool calling)"
     "custom-model|Другая модель… → выбор провайдера и модели"
     "change-api-key|Сменить ключ API провайдера"
@@ -56,7 +54,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "claude-zai"|"claude-zai-glm51"|"claude-nim"|"claude-nim-qwen"|"claude-groq-llama"|"claude-groq-qwen"|"claude-openrouter-sonnet"|"custom-claude-zai"|"custom-claude-nim")
+        "claude-zai"|"claude-zai-glm51"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-sonnet"|"custom-claude-zai"|"custom-claude-nim")
             echo "$profile_id"
             return 0
             ;;
@@ -101,21 +99,6 @@ invoke_claude_cloud_profile() {
                 -VaultPath "$VAULT_PATH" \
                 -ObsidianExe "$OBSIDIAN_EXE" \
                 -ClaudeTools default \
-                -SkipCommonPreamble
-            ;;
-        "claude-groq-llama")
-            bash "$SESSION_SCRIPT" -Provider groq \
-                -VaultPath "$VAULT_PATH" \
-                -ObsidianExe "$OBSIDIAN_EXE" \
-                -ClaudeTools minimal \
-                -SkipCommonPreamble
-            ;;
-        "claude-groq-qwen")
-            bash "$SESSION_SCRIPT" -Provider groq \
-                -ZaiAnthropicModelId "qwen/qwen3-32b" \
-                -VaultPath "$VAULT_PATH" \
-                -ObsidianExe "$OBSIDIAN_EXE" \
-                -ClaudeTools minimal \
                 -SkipCommonPreamble
             ;;
         "claude-openrouter-sonnet")

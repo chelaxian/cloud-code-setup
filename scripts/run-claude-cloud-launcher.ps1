@@ -50,14 +50,6 @@ $script:Profiles = @(
     Label = "NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
   }
   @{
-    Id    = "claude-groq-llama"
-    Label = "Groq — Llama 3.3 70B (free, tool calling)"
-  }
-  @{
-    Id    = "claude-groq-qwen"
-    Label = "Groq — Qwen3 32B (free, tool calling)"
-  }
-  @{
     Id    = "claude-openrouter-sonnet"
     Label = "OpenRouter — Claude Sonnet 4 (paid, tool calling)"
   }
@@ -100,8 +92,8 @@ function Resolve-ProfileFromState($state) {
   $id = [string]$state.profileId
   if ($id -in @(
       "claude-zai", "claude-zai-glm51", "claude-nim", "claude-nim-qwen",
-      "claude-groq-llama", "claude-groq-qwen", "claude-openrouter-sonnet",
-      "custom-claude-zai", "custom-claude-nim", "custom-claude-groq", "custom-claude-openrouter"
+      "claude-openrouter-sonnet",
+      "custom-claude-zai", "custom-claude-nim", "custom-claude-openrouter"
     )) { return $id }
   return $null
 }
@@ -139,16 +131,6 @@ function Invoke-ClaudeCloudProfile {
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }
-    "claude-groq-llama" {
-      & $SessionScript -Provider groq -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools minimal `
-        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
-      return
-    }
-    "claude-groq-qwen" {
-      & $SessionScript -Provider groq -ZaiAnthropicModelId "qwen/qwen3-32b" -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools minimal `
-        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
-      return
-    }
     "claude-openrouter-sonnet" {
       & $SessionScript -Provider openrouter -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools default `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
@@ -177,16 +159,6 @@ function Invoke-ClaudeCloudProfile {
       $claudeTools = if (Test-NvidiaNimOpenAiNativeToolCalling $catalog) { "default" } else { "minimal" }
       $port = Get-LauncherFreeTcpPort
       & $SessionScript -Provider nim -NimModel $full.Trim() -ProxyPort $port -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools $claudeTools `
-        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
-      return
-    }
-    "custom-claude-groq" {
-      $st = Get-LauncherState
-      $mid = [string]$st.customModelId
-      if ([string]::IsNullOrWhiteSpace($mid)) {
-        throw "Нет customModelId для custom-claude-groq. Выберите модель в «Другая модель»."
-      }
-      & $SessionScript -Provider groq -ZaiAnthropicModelId $mid.Trim() -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools minimal `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }
@@ -250,10 +222,6 @@ while ($true) {
       "zai" {
         Save-LauncherState -ProfileId "custom-claude-zai" -Extra @{ customModelId = [string]$w.ModelId }
         Invoke-ClaudeCloudProfile -ProfileId "custom-claude-zai"
-      }
-      "groq" {
-        Save-LauncherState -ProfileId "custom-claude-groq" -Extra @{ customModelId = [string]$w.ModelId }
-        Invoke-ClaudeCloudProfile -ProfileId "custom-claude-groq"
       }
       "openrouter" {
         Save-LauncherState -ProfileId "custom-claude-openrouter" -Extra @{ customModelId = [string]$w.ModelId }

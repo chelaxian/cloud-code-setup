@@ -62,7 +62,7 @@ cd cloud-code-setup
 |-----------|--------|----------|
 | **NVIDIA NIM** | GLM-4.7, Qwen3.5-122B-A10B | Qwen Code, Claude Code, OpenCode |
 | **Z.AI** | GLM-4.7, GLM-5.1 | Qwen Code, Claude Code, OpenCode |
-| **Groq** | Llama 3.3 70B, Qwen3 32B | Qwen Code, Claude Code, OpenCode |
+| **Groq** | Llama 3.3 70B, Qwen3 32B | Qwen Code, OpenCode |
 | **OpenRouter** | Qwen3 Coder (free), Claude Sonnet 4 (paid) | Qwen Code, Claude Code, OpenCode |
 
 ### Где взять API ключи

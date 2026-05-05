@@ -1,7 +1,7 @@
 [CmdletBinding(DefaultParameterSetName = "Full")]
 param(
   [Parameter(ParameterSetName = "Full", Mandatory = $true)]
-  [ValidateSet("zai", "nim", "nim-qwen", "openrouter", "groq")]
+  [ValidateSet("zai", "nim", "nim-qwen", "openrouter")]
   [string]$Provider,
 
   [Parameter(ParameterSetName = "Prepare")]
@@ -270,7 +270,8 @@ function Ensure-FreeClaudeCodeProxy {
     [int]$Port,
     [string]$NimKey,
     [string]$Model,
-    [string]$AuthToken
+    [string]$AuthToken,
+    [hashtable]$ExtraEnv = @{}
   )
 
   # Be strict: require a listening socket (HTTP checks can false-positive on some failures).
@@ -292,6 +293,10 @@ function Ensure-FreeClaudeCodeProxy {
     $env:NVIDIA_NIM_API_KEY = $NimKey
     $env:MODEL = $Model
     $env:ANTHROPIC_AUTH_TOKEN = $AuthToken
+
+    foreach ($ek in $ExtraEnv.Keys) {
+      Set-Item -Path "env:$ek" -Value $ExtraEnv[$k]
+    }
 
     # Start proxy in background with logs.
     $logDir = Join-Path $HOME ".qwen-local-setup"
@@ -432,7 +437,7 @@ if ($Provider -eq "openrouter") {
   $orPort = 8084
   if ($PSBoundParameters.ContainsKey("ProxyPort")) { $orPort = $ProxyPort }
 
-  Ensure-FreeClaudeCodeProxy -Dir $FreeClaudeCodeDir -Port $orPort -NimKey $orKey -Model $orModel -AuthToken $ProxyAuthToken
+  Ensure-FreeClaudeCodeProxy -Dir $FreeClaudeCodeDir -Port $orPort -NimKey $orKey -Model $orModel -AuthToken $ProxyAuthToken -ExtraEnv @{ OPENROUTER_API_KEY = $orKey }
   $env:OPENROUTER_API_KEY = $orKey
   $env:ANTHROPIC_AUTH_TOKEN = $ProxyAuthToken
   $env:ANTHROPIC_BASE_URL = ("http://127.0.0.1:{0}" -f $orPort)
@@ -443,34 +448,6 @@ if ($Provider -eq "openrouter") {
       throw "free-claude-code not responding on http://127.0.0.1:$orPort"
     }
     Write-Host "dry-run:OPENROUTER:OK" -ForegroundColor Green
-    return
-  }
-}
-
-if ($Provider -eq "groq") {
-  $groqKey = [Environment]::GetEnvironmentVariable("GROQ_API_KEY","User")
-  if ([string]::IsNullOrWhiteSpace($groqKey)) { $groqKey = $env:GROQ_API_KEY }
-  if ([string]::IsNullOrWhiteSpace($groqKey)) { $groqKey = Read-SecretText "Enter Groq API key (will not be saved)" }
-
-  $groqModel = "nvidia_nim/llama-3.3-70b-versatile"
-  if (-not [string]::IsNullOrWhiteSpace($ZaiAnthropicModelId)) {
-    $groqModel = "nvidia_nim/$($ZaiAnthropicModelId.Trim())"
-  }
-
-  $groqPort = 8085
-  if ($PSBoundParameters.ContainsKey("ProxyPort")) { $groqPort = $ProxyPort }
-
-  Ensure-FreeClaudeCodeProxy -Dir $FreeClaudeCodeDir -Port $groqPort -NimKey $groqKey -Model $groqModel -AuthToken $ProxyAuthToken
-  $env:ANTHROPIC_AUTH_TOKEN = $ProxyAuthToken
-  $env:ANTHROPIC_BASE_URL = ("http://127.0.0.1:{0}" -f $groqPort)
-  $env:API_TIMEOUT_MS = "3000000"
-  $env:NVIDIA_NIM_API_KEY = $groqKey
-
-  if ($DryRun -ne 0) {
-    if (-not (Test-HttpResponding -Url ("http://127.0.0.1:{0}/v1/models" -f $groqPort) -TimeoutSec 3)) {
-      throw "free-claude-code not responding on http://127.0.0.1:$groqPort"
-    }
-    Write-Host "dry-run:GROQ:OK" -ForegroundColor Green
     return
   }
 }
