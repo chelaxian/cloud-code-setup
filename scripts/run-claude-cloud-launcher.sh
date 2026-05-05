@@ -54,7 +54,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "claude-zai"|"claude-zai-glm51"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-sonnet"|"custom-claude-zai"|"custom-claude-nim")
+        "claude-zai"|"claude-zai-glm51"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-sonnet"|"custom-claude-zai"|"custom-claude-nim"|"custom-claude-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -141,11 +141,161 @@ invoke_claude_cloud_profile() {
                 -ClaudeTools minimal \
                 -SkipCommonPreamble
             ;;
+        "custom-claude-openrouter")
+            local state=$(get_launcher_state)
+            local model_id=$(echo "$state" | grep -o '"customModelId":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -z "$model_id" ]; then
+                echo -e "${RED}Нет customModelId для custom-claude-openrouter. Выберите модель в «Другая модель».${RESET}"
+                return 1
+            fi
+            
+            bash "$SESSION_SCRIPT" -Provider openrouter \
+                -OpenRouterModel "$model_id" \
+                -VaultPath "$VAULT_PATH" \
+                -ObsidianExe "$OBSIDIAN_EXE" \
+                -ClaudeTools default \
+                -SkipCommonPreamble
+            ;;
         *)
             echo -e "${RED}Неизвестный профиль: $profile_id${RESET}"
             return 1
             ;;
     esac
+}
+
+# ── API key helpers ──────────────────────────────────────────────────────────
+get_claude_zai_api_key() {
+    local key="${ZAI_API_KEY:-}"
+    if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
+        key="${OPENAI_API_KEY:-}"
+    fi
+    if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
+        echo -e "${YELLOW}Z.AI API ключ не задан. Задайте ZAI_API_KEY.${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+get_claude_nim_api_key() {
+    local key="${NVIDIA_NIM_API_KEY:-}"
+    if [ -z "$key" ]; then
+        echo -e "${YELLOW}NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY.${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+get_claude_openrouter_api_key() {
+    local key="${OPENROUTER_API_KEY:-}"
+    if [ -z "$key" ]; then
+        echo -e "${YELLOW}OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY.${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+# ── Мастер выбора модели ─────────────────────────────────────────────────────
+invoke_claude_custom_model_wizard() {
+    local app_brand="$1"
+
+    local prov_items=(
+        "zai|Z.AI — Coding / Anthropic (список моделей по вашему ключу)"
+        "nim|NVIDIA NIM — полный каталог (GET /v1/models)"
+        "openrouter|OpenRouter — полный каталог моделей (GET /v1/models)"
+        "openrouter-free|OpenRouter — только бесплатные модели (статический список)"
+    )
+
+    while true; do
+        local prov_menu=()
+        for item in "${prov_items[@]}"; do
+            local label="${item##*|}"
+            prov_menu+=("$label")
+        done
+
+        show_tui_framed_menu "$app_brand" "Другая модель" "Шаг 1 из 2 — выберите провайдера" "${prov_menu[@]}"
+        local prov_choice=$?
+
+        if [ $prov_choice -eq 0 ]; then
+            return 1
+        fi
+
+        local prov_source=$(echo "${prov_items[$((prov_choice-1))]}" | cut -d'|' -f1)
+
+        local ids=()
+        local key=""
+
+        if [ "$prov_source" = "zai" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога моделей Z.AI…"
+            key=$(get_claude_zai_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" "https://api.z.ai/api/coding/paas/v4/models" 2>/dev/null) || true
+            if [ -z "$response" ]; then
+                response=$(curl -s -H "Authorization: Bearer $key" "https://api.z.ai/api/paas/v4/models" 2>/dev/null) || true
+            fi
+
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+
+            if [ ${#ids[@]} -eq 0 ]; then
+                ids=("glm-4.7" "glm-4.7-flash" "glm-4.7-flashx" "glm-4.6" "glm-4.5" "glm-5" "glm-5-turbo" "glm-5.1")
+            fi
+        elif [ "$prov_source" = "nim" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога NVIDIA NIM…"
+            key=$(get_claude_nim_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" "https://integrate.api.nvidia.com/v1/models" 2>/dev/null) || true
+
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+        elif [ "$prov_source" = "openrouter" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога OpenRouter…"
+            key=$(get_claude_openrouter_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" -H "Content-Type: application/json" "https://openrouter.ai/api/v1/models" 2>/dev/null) || true
+
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+        elif [ "$prov_source" = "openrouter-free" ]; then
+            ids=( "openrouter/free" "tencent/hy3-preview:free" "nvidia/nemotron-3-super:free" "inclusionai/ling-2.6-1t:free" "openai/gpt-oss-120b:free" "poolside/laguna-m.1:free" "openrouter/owl-alpha:free" "z-ai/glm-4.5-air:free" "minimax/minimax-m2.5:free" "openai/gpt-oss-20b:free" "meta-llama/llama-4-scout:free" "qwen/qwen3-coder:free" "deepseek/deepseek-r1:free" "google/gemma-4-31b:free" "meta-llama/llama-3.3-70b-instruct:free" "mistralai/mistral-small-3.1-24b-instruct:free" )
+            key=$(get_claude_openrouter_api_key) || true
+        fi
+
+        if [ ${#ids[@]} -eq 0 ]; then
+            echo -e "${RED}Провайдер вернул пустой список моделей.${RESET}"
+            read -p "Нажмите Enter…"
+            return 1
+        fi
+
+        local model_menu=()
+        for id in "${ids[@]}"; do
+            model_menu+=("$id")
+        done
+
+        show_tui_framed_menu "$app_brand" "Другая модель" "Шаг 2 из 2 — моделей: ${#ids[@]}" "${model_menu[@]}"
+        local model_choice=$?
+
+        if [ $model_choice -eq 0 ]; then
+            continue
+        fi
+
+        local model_id="${ids[$((model_choice-1))]}"
+        local prov="nim"
+        if [ "$prov_source" = "zai" ]; then
+            prov="zai"
+        elif [ "$prov_source" = "openrouter" ] || [ "$prov_source" = "openrouter-free" ]; then
+            prov="openrouter"
+        fi
+
+        echo "$prov|$model_id"
+        return 0
+    done
 }
 
 # Быстрый старт
@@ -191,10 +341,26 @@ while true; do
             continue
             ;;
         "custom-model")
-            # TODO: Вызов мастера выбора модели
-            echo -e "${YELLOW}Функция «Другая модель» в разработке${RESET}"
-            sleep 2
-            continue
+            wizard_result=$(invoke_claude_custom_model_wizard "Claude") || {
+                echo -e "${YELLOW}Отменено.${RESET}"
+                continue
+            }
+            local wiz_provider=$(echo "$wizard_result" | cut -d'|' -f1)
+            local wiz_model=$(echo "$wizard_result" | cut -d'|' -f2)
+            
+            local new_id="custom-claude-nim"
+            local extra="\"customNimModel\":\"$wiz_model\""
+            if [ "$wiz_provider" = "zai" ]; then
+                new_id="custom-claude-zai"
+                extra="\"customModelId\":\"$wiz_model\""
+            elif [ "$wiz_provider" = "openrouter" ]; then
+                new_id="custom-claude-openrouter"
+                extra="\"customModelId\":\"$wiz_model\""
+            fi
+            
+            save_launcher_state "$new_id" "$extra"
+            invoke_claude_cloud_profile "$new_id"
+            exit $?
             ;;
         "last")
             if state=$(get_launcher_state); then

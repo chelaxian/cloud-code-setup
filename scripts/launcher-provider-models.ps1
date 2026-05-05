@@ -200,3 +200,77 @@ function Get-OpenRouterModelIdsFromApi {
   $ids = @($resp.data | Sort-Object -Property id | ForEach-Object { $_.id })
   return $ids
 }
+
+function Get-GroqBundledFreeModelIds {
+  $raw = @(
+    "llama-3.1-8b-instant"
+    "llama-3.3-70b-versatile"
+    "meta-llama/llama-4-scout-17b-16e-instruct"
+    "openai/gpt-oss-120b"
+    "openai/gpt-oss-20b"
+    "qwen/qwen3-32b"
+    "allam-2-7b"
+    "gemma2-9b-it"
+    "deepseek-r1-distill-llama-70b"
+    "deepseek-r1-distill-qwen-32b"
+    "distil-whisper-large-v3-en"
+    "llama3-70b-8192"
+    "llama3-8b-8192"
+    "llama-3.2-1b-preview"
+    "llama-3.2-3b-preview"
+    "llama-3.2-11b-text-preview"
+    "llama-3.2-90b-text-preview"
+    "mixtral-8x7b-32768"
+    "whisper-large-v3"
+    "whisper-large-v3-turbo"
+  )
+  return ($raw | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Sort-Object -Unique)
+}
+
+function Get-OpenRouterBundledFreeModelIds {
+  $raw = @(
+    "openrouter/free"
+    "tencent/hy3-preview:free"
+    "nvidia/nemotron-3-super:free"
+    "inclusionai/ling-2.6-1t:free"
+    "openai/gpt-oss-120b:free"
+    "poolside/laguna-m.1:free"
+    "openrouter/owl-alpha:free"
+    "z-ai/glm-4.5-air:free"
+    "minimax/minimax-m2.5:free"
+    "nvidia/nemotron-3-nano-30b-a3b:free"
+    "openai/gpt-oss-20b:free"
+    "poolside/laguna-xs.2:free"
+    "nvidia/nemotron-3-nano-omni:free"
+    "google/gemma-4-31b:free"
+    "nvidia/nemotron-nano-12b-2-vl:free"
+    "nvidia/nemotron-nano-9b-v2:free"
+    "google/gemma-4-26b-a4b:free"
+    "meta-llama/llama-4-scout:free"
+    "qwen/qwen3-235b-a22b:free"
+    "qwen/qwen3-30b-a3b:free"
+    "qwen/qwen3-32b:free"
+    "qwen/qwen3-14b:free"
+    "qwen/qwen3-8b:free"
+    "qwen/qwen3-coder:free"
+    "deepseek/deepseek-r1:free"
+    "deepseek/deepseek-r1-0528:free"
+    "deepseek/deepseek-chat-v3-0324:free"
+    "deepseek/deepseek-r1-0528-qwen3-8b:free"
+    "google/gemma-3-27b-it:free"
+    "google/gemma-3-12b-it:free"
+    "google/gemma-3-4b-it:free"
+    "google/gemma-3-1b-it:free"
+    "mistralai/mistral-small-3.1-24b-instruct:free"
+    "meta-llama/llama-3.3-70b-instruct:free"
+    "meta-llama/llama-3.1-8b-instruct:free"
+    "microsoft/phi-4:free"
+    "microsoft/mai-ds-r1:free"
+    "moonshotai/kimi-vl-a3b-thinking:free"
+    "bytedance-research/ui-tars-72b:free"
+    "rekaai/reka-flash-3:free"
+    "nousresearch/deephermes-3-llama-3-8b-preview:free"
+    "allenai/molmo-7b-d-0924:free"
+  )
+  return ($raw | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Sort-Object -Unique)
+}

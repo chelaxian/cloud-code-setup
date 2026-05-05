@@ -17,8 +17,8 @@ PROFILES=(
     "zai-glm51|Z.AI — GLM-5.1 (free, tool calling)"
     "nim-glm|NVIDIA NIM — GLM-4.7 (free, tool calling)"
     "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
-    "groq-llama|Groq — Llama 3.3 70B (free, tool calling)"
-    "groq-qwen|Groq — Qwen3 32B (free, tool calling)"
+    "groq-llama|Groq — Llama 3.3 70B (free, tool calling, заблокирован в РФ)"
+    "groq-qwen|Groq — Qwen3 32B (free, tool calling, заблокирован в РФ)"
     "openrouter-qwen-coder|OpenRouter — Qwen3 Coder (free, tool calling)"
     "custom-model|Другая модель… → выбор провайдера и модели"
     "change-api-key|Сменить ключ API провайдера"
@@ -145,6 +145,24 @@ get_nim_api_key() {
     local key="${NVIDIA_NIM_API_KEY:-}"
     if [ -z "$key" ]; then
         echo -e "${YELLOW}NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY или выберите «Сменить ключ API провайдера».${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+get_groq_api_key() {
+    local key="${GROQ_API_KEY:-}"
+    if [ -z "$key" ]; then
+        echo -e "${YELLOW}Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера».${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+get_openrouter_api_key() {
+    local key="${OPENROUTER_API_KEY:-}"
+    if [ -z "$key" ]; then
+        echo -e "${YELLOW}OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY или выберите «Сменить ключ API провайдера».${RESET}" >&2
         return 1
     fi
     echo "$key"
@@ -322,6 +340,10 @@ invoke_custom_model_wizard() {
     local prov_items=(
         "zai|Z.AI — Coding / Anthropic (список моделей по вашему ключу)"
         "nim|NVIDIA NIM — полный каталог (GET /v1/models)"
+        "groq|Groq — полный каталог моделей (GET /v1/models, заблокирован в РФ)"
+        "groq-free|Groq — только бесплатные модели (статический список)"
+        "openrouter|OpenRouter — полный каталог моделей (GET /v1/models)"
+        "openrouter-free|OpenRouter — только бесплатные модели (статический список)"
     )
     
     while true; do
@@ -371,6 +393,32 @@ invoke_custom_model_wizard() {
             if [ -n "$response" ]; then
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
+        elif [ "$prov_source" = "groq" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога Groq…"
+            key=$(get_groq_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+            
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" -H "Content-Type: application/json" "https://api.groq.com/openai/v1/models" 2>/dev/null) || true
+            
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+        elif [ "$prov_source" = "groq-free" ]; then
+            ids=( "llama-3.1-8b-instant" "llama-3.3-70b-versatile" "meta-llama/llama-4-scout-17b-16e-instruct" "openai/gpt-oss-120b" "openai/gpt-oss-20b" "qwen/qwen3-32b" "allam-2-7b" "deepseek-r1-distill-llama-70b" "deepseek-r1-distill-qwen-32b" "gemma2-9b-it" )
+            key=$(get_groq_api_key) || true
+        elif [ "$prov_source" = "openrouter" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога OpenRouter…"
+            key=$(get_openrouter_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+            
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" -H "Content-Type: application/json" "https://openrouter.ai/api/v1/models" 2>/dev/null) || true
+            
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+        elif [ "$prov_source" = "openrouter-free" ]; then
+            ids=( "openrouter/free" "tencent/hy3-preview:free" "nvidia/nemotron-3-super:free" "inclusionai/ling-2.6-1t:free" "openai/gpt-oss-120b:free" "poolside/laguna-m.1:free" "openrouter/owl-alpha:free" "z-ai/glm-4.5-air:free" "minimax/minimax-m2.5:free" "nvidia/nemotron-3-nano-30b-a3b:free" "openai/gpt-oss-20b:free" "meta-llama/llama-4-scout:free" "qwen/qwen3-235b-a22b:free" "qwen/qwen3-coder:free" "deepseek/deepseek-r1:free" "google/gemma-4-31b:free" "meta-llama/llama-3.3-70b-instruct:free" "mistralai/mistral-small-3.1-24b-instruct:free" )
+            key=$(get_openrouter_api_key) || true
         fi
         
         if [ ${#ids[@]} -eq 0 ]; then
@@ -395,6 +443,10 @@ invoke_custom_model_wizard() {
         local prov="nim"
         if [ "$prov_source" = "zai" ]; then
             prov="zai"
+        elif [ "$prov_source" = "groq" ] || [ "$prov_source" = "groq-free" ]; then
+            prov="groq"
+        elif [ "$prov_source" = "openrouter" ] || [ "$prov_source" = "openrouter-free" ]; then
+            prov="openrouter"
         fi
         
         echo "$prov|$model_id"
