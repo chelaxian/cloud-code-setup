@@ -13,8 +13,9 @@ STATE_FILE="$SCRIPT_DIR/qwen-code-launcher-state.json"
 PROFILES=(
     "last|Запустить с последними настройками (быстрый старт)"
     "nim-glm|NVIDIA NIM — GLM-4.7 (tool calling + thinking, модель …-tools)"
-    "nim-deepseek|NVIDIA NIM — DeepSeek V3.1 Terminus (tool calling + thinking, …-tools)"
+    "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (tool calling + thinking, …-tools)"
     "zai-glm|Z.AI — GLM-4.7 (OpenAI Coding API: tool calling + thinking + агент)"
+    "zai-glm51|Z.AI — GLM-5.1 (OpenAI Coding API: tool calling + thinking + агент)"
     "custom-model|Другая модель… → Z.AI или NIM, список с API (прокрутка)"
     "change-api-key|Сменить ключ API провайдера"
 )
@@ -47,7 +48,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "nim-glm"|"nim-deepseek"|"zai-glm"|"custom-qwen-zai"|"custom-qwen-nim")
+        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"custom-qwen-zai"|"custom-qwen-nim")
             echo "$profile_id"
             return 0
             ;;
@@ -64,11 +65,14 @@ invoke_qwen_profile() {
         "nim-glm")
             bash "$SCRIPT_DIR/run-qwen-code-nvidia-nim.sh" -Model "nim-glm-4.7-tools"
             ;;
-        "nim-deepseek")
-            bash "$SCRIPT_DIR/run-qwen-code-nvidia-nim.sh" -Model "nim-deepseek-v3.1-terminus-tools"
+        "nim-qwen")
+            bash "$SCRIPT_DIR/run-qwen-code-nvidia-nim.sh" -Model "nim-qwen3.5-122b-a10b-tools"
             ;;
         "zai-glm")
             bash "$SCRIPT_DIR/run-qwen-code-cloud-zai-glm47.sh"
+            ;;
+        "zai-glm51")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-5.1"
             ;;
         "custom-qwen-zai")
             local state=$(get_launcher_state)

@@ -25,13 +25,17 @@ $script:Profiles = @(
     NimModel    = "nim-glm-4.7-tools"
   }
   @{
-    Id          = "nim-deepseek"
-    Label       = "NVIDIA NIM — DeepSeek V3.1 Terminus (tool calling + thinking, …-tools)"
-    NimModel    = "nim-deepseek-v3.1-terminus-tools"
+    Id          = "nim-qwen"
+    Label       = "NVIDIA NIM — Qwen3.5-122B-A10B (tool calling + thinking, …-tools)"
+    NimModel    = "nim-qwen3.5-122b-a10b-tools"
   }
   @{
     Id          = "zai-glm"
     Label       = "Z.AI — GLM-4.7 (OpenAI Coding API: tool calling + thinking + агент)"
+  }
+  @{
+    Id          = "zai-glm51"
+    Label       = "Z.AI — GLM-5.1 (OpenAI Coding API: tool calling + thinking + агент)"
   }
   @{
     Id          = "custom-model"
@@ -71,7 +75,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("nim-glm", "nim-deepseek", "zai-glm", "custom-qwen-zai", "custom-qwen-nim")) { return $id }
+  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "custom-qwen-zai", "custom-qwen-nim")) { return $id }
   return $null
 }
 
@@ -83,12 +87,16 @@ function Invoke-QwenProfile {
       & (Join-Path $PSScriptRoot "run-qwen-code-nvidia-nim.ps1") -Model "nim-glm-4.7-tools"
       return
     }
-    "nim-deepseek" {
-      & (Join-Path $PSScriptRoot "run-qwen-code-nvidia-nim.ps1") -Model "nim-deepseek-v3.1-terminus-tools"
+    "nim-qwen" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-nvidia-nim.ps1") -Model "nim-qwen3.5-122b-a10b-tools"
       return
     }
     "zai-glm" {
       & (Join-Path $PSScriptRoot "run-qwen-code-cloud-zai-glm47.ps1")
+      return
+    }
+    "zai-glm51" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai -ModelId "glm-5.1"
       return
     }
     "custom-qwen-zai" {

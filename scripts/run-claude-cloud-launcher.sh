@@ -18,8 +18,9 @@ OBSIDIAN_EXE="${OBSIDIAN_EXE:-/usr/bin/obsidian}"
 PROFILES=(
     "last|Запустить с последними настройками (быстрый старт)"
     "claude-zai|Z.AI — GLM-4.7 (Anthropic api.z.ai; Claude Code — tool calling)"
+    "claude-zai-glm51|Z.AI — GLM-5.1 (Anthropic api.z.ai; Claude Code — tool calling)"
     "claude-nim|NVIDIA NIM — GLM-4.7 (free-claude-code → NIM; tool calling)"
-    "claude-nim-deepseek|NVIDIA NIM — DeepSeek V3.1 Terminus (free-claude-code → NIM; tool calling)"
+    "claude-nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free-claude-code → NIM; tool calling)"
     "custom-model|Другая модель… → Z.AI или NIM, список с API (прокрутка)"
     "change-api-key|Сменить ключ API провайдера"
 )
@@ -52,7 +53,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "claude-zai"|"claude-nim"|"claude-nim-deepseek"|"custom-claude-zai"|"custom-claude-nim")
+        "claude-zai"|"claude-zai-glm51"|"claude-nim"|"claude-nim-qwen"|"custom-claude-zai"|"custom-claude-nim")
             echo "$profile_id"
             return 0
             ;;
@@ -77,6 +78,14 @@ invoke_claude_cloud_profile() {
                 -ClaudeTools default \
                 -SkipCommonPreamble
             ;;
+        "claude-zai-glm51")
+            bash "$SESSION_SCRIPT" -Provider zai \
+                -ZaiAnthropicModelId "glm-5.1" \
+                -VaultPath "$VAULT_PATH" \
+                -ObsidianExe "$OBSIDIAN_EXE" \
+                -ClaudeTools default \
+                -SkipCommonPreamble
+            ;;
         "claude-nim")
             bash "$SESSION_SCRIPT" -Provider nim \
                 -VaultPath "$VAULT_PATH" \
@@ -84,8 +93,8 @@ invoke_claude_cloud_profile() {
                 -ClaudeTools default \
                 -SkipCommonPreamble
             ;;
-        "claude-nim-deepseek")
-            bash "$SESSION_SCRIPT" -Provider nim-deepseek \
+        "claude-nim-qwen")
+            bash "$SESSION_SCRIPT" -Provider nim-qwen \
                 -VaultPath "$VAULT_PATH" \
                 -ObsidianExe "$OBSIDIAN_EXE" \
                 -ClaudeTools default \

@@ -14,8 +14,9 @@ CONFIG_DIR="$SCRIPT_DIR/opencode-sessions"
 PROFILES=(
     "last|Запустить с последними настройками (быстрый старт)"
     "zai-glm|Z.AI — GLM-4.7 (OpenAI-compatible Coding API)"
+    "zai-glm51|Z.AI — GLM-5.1 (OpenAI-compatible Coding API)"
     "nim-glm|NVIDIA NIM — GLM-4.7 (OpenAI-compatible, integrate API)"
-    "nim-deepseek|NVIDIA NIM — DeepSeek V3.1 Terminus (OpenAI-compatible)"
+    "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (OpenAI-compatible)"
     "custom-model|Другая модель… → Z.AI или NIM, список с API (прокрутка)"
     "change-api-key|Сменить ключ API провайдера"
 )
@@ -48,7 +49,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "zai-glm"|"nim-glm"|"nim-deepseek"|"custom-opencode-zai"|"custom-opencode-nim")
+        "zai-glm"|"zai-glm51"|"nim-glm"|"nim-qwen"|"custom-opencode-zai"|"custom-opencode-nim")
             echo "$profile_id"
             return 0
             ;;
@@ -166,6 +167,15 @@ invoke_opencode_profile() {
             echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-4.7)…${RESET}"
             "$opencode_exe"
             ;;
+        "zai-glm51")
+            local api_key
+            api_key=$(get_zai_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "zai" "glm-5.1" "https://api.z.ai/api/openai/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-5.1)…${RESET}"
+            "$opencode_exe"
+            ;;
         "nim-glm")
             local api_key
             api_key=$(get_nim_api_key) || return 1
@@ -175,13 +185,13 @@ invoke_opencode_profile() {
             echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM GLM-4.7)…${RESET}"
             "$opencode_exe"
             ;;
-        "nim-deepseek")
+        "nim-qwen")
             local api_key
             api_key=$(get_nim_api_key) || return 1
             local config_path
-            config_path=$(write_opencode_config "nvidia-nim" "deepseek-ai/deepseek-v3.1-terminus" "https://integrate.api.nvidia.com/v1" "$api_key")
+            config_path=$(write_opencode_config "nvidia-nim" "qwen/qwen3.5-122b-a10b" "https://integrate.api.nvidia.com/v1" "$api_key")
             export OPENCODE_CONFIG="$config_path"
-            echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM DeepSeek V3.1 Terminus)…${RESET}"
+            echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM Qwen3.5-122B-A10B)…${RESET}"
             "$opencode_exe"
             ;;
         "custom-opencode-zai")

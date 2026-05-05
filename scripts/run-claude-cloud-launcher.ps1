@@ -38,12 +38,16 @@ $script:Profiles = @(
     Label = "Z.AI — GLM-4.7 (Anthropic api.z.ai; Claude Code — tool calling)"
   }
   @{
+    Id    = "claude-zai-glm51"
+    Label = "Z.AI — GLM-5.1 (Anthropic api.z.ai; Claude Code — tool calling)"
+  }
+  @{
     Id    = "claude-nim"
     Label = "NVIDIA NIM — GLM-4.7 (free-claude-code → NIM; tool calling)"
   }
   @{
-    Id    = "claude-nim-deepseek"
-    Label = "NVIDIA NIM — DeepSeek V3.1 Terminus (free-claude-code → NIM; tool calling)"
+    Id    = "claude-nim-qwen"
+    Label = "NVIDIA NIM — Qwen3.5-122B-A10B (free-claude-code → NIM; tool calling)"
   }
   @{
     Id    = "custom-model"
@@ -83,7 +87,7 @@ function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
   if ($id -in @(
-      "claude-zai", "claude-nim", "claude-nim-deepseek",
+      "claude-zai", "claude-zai-glm51", "claude-nim", "claude-nim-qwen",
       "custom-claude-zai", "custom-claude-nim"
     )) { return $id }
   return $null
@@ -107,13 +111,18 @@ function Invoke-ClaudeCloudProfile {
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }
+    "claude-zai-glm51" {
+      & $SessionScript -Provider zai -ZaiAnthropicModelId "glm-5.1" -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools default `
+        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
+      return
+    }
     "claude-nim" {
       & $SessionScript -Provider nim -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools default `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }
-    "claude-nim-deepseek" {
-      & $SessionScript -Provider nim-deepseek -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools default `
+    "claude-nim-qwen" {
+      & $SessionScript -Provider nim-qwen -VaultPath $VaultPath -ObsidianExe $ObsidianExe -ClaudeTools default `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }

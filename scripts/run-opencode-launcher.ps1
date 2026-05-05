@@ -23,12 +23,16 @@ $script:Profiles = @(
     Label = "Z.AI — GLM-4.7 (OpenAI-compatible Coding API)"
   }
   @{
+    Id    = "zai-glm51"
+    Label = "Z.AI — GLM-5.1 (OpenAI-compatible Coding API)"
+  }
+  @{
     Id    = "nim-glm"
     Label = "NVIDIA NIM — GLM-4.7 (OpenAI-compatible, integrate API)"
   }
   @{
-    Id    = "nim-deepseek"
-    Label = "NVIDIA NIM — DeepSeek V3.1 Terminus (OpenAI-compatible)"
+    Id    = "nim-qwen"
+    Label = "NVIDIA NIM — Qwen3.5-122B-A10B (OpenAI-compatible)"
   }
   @{
     Id    = "custom-model"
@@ -68,7 +72,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("zai-glm", "nim-glm", "nim-deepseek", "custom-opencode-zai", "custom-opencode-nim")) { return $id }
+  if ($id -in @("zai-glm", "zai-glm51", "nim-glm", "nim-qwen", "custom-opencode-zai", "custom-opencode-nim")) { return $id }
   return $null
 }
 
@@ -183,6 +187,28 @@ function Invoke-OpenCodeProfile {
       & $opencodeExe
       return
     }
+    "zai-glm51" {
+      $apiKey = [Environment]::GetEnvironmentVariable("ZAI_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        $apiKey = $env:ZAI_API_KEY
+      }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        $apiKey = [Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User")
+      }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        $apiKey = $env:OPENAI_API_KEY
+      }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        throw "Z.AI API ключ не задан. Задайте ZAI_API_KEY или выберите «Сменить ключ API провайдера»."
+      }
+
+      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-5.1" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey
+
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (Z.AI GLM-5.1)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
     "nim-glm" {
       $apiKey = [Environment]::GetEnvironmentVariable("NVIDIA_NIM_API_KEY", "User")
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
@@ -199,7 +225,7 @@ function Invoke-OpenCodeProfile {
       & $opencodeExe
       return
     }
-    "nim-deepseek" {
+    "nim-qwen" {
       $apiKey = [Environment]::GetEnvironmentVariable("NVIDIA_NIM_API_KEY", "User")
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         $apiKey = $env:NVIDIA_NIM_API_KEY
@@ -208,10 +234,10 @@ function Invoke-OpenCodeProfile {
         throw "NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY или выберите «Сменить ключ API провайдера»."
       }
 
-      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "deepseek-ai/deepseek-v3.1-terminus" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "qwen/qwen3.5-122b-a10b" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey
 
       $env:OPENCODE_CONFIG = $configPath
-      Write-Host "Запуск OpenCode (NVIDIA NIM DeepSeek V3.1 Terminus)…" -ForegroundColor Cyan
+      Write-Host "Запуск OpenCode (NVIDIA NIM Qwen3.5-122B-A10B)…" -ForegroundColor Cyan
       & $opencodeExe
       return
     }
