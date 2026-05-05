@@ -1,0 +1,402 @@
+#!/bin/bash
+# Меню OpenCode (облако) - Linux версия
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+STATE_FILE="$SCRIPT_DIR/opencode-launcher-state.json"
+CONFIG_DIR="$SCRIPT_DIR/opencode-sessions"
+
+# Загрузка модулей
+. "$SCRIPT_DIR/launcher-tui.sh"
+. "$SCRIPT_DIR/launcher-api-keys.sh"
+
+PROFILES=(
+    "last|Запустить с последними настройками (быстрый старт)"
+    "zai-glm|Z.AI — GLM-4.7 (OpenAI-compatible Coding API)"
+    "nim-glm|NVIDIA NIM — GLM-4.7 (OpenAI-compatible, integrate API)"
+    "nim-deepseek|NVIDIA NIM — DeepSeek V3.1 Terminus (OpenAI-compatible)"
+    "custom-model|Другая модель… → Z.AI или NIM, список с API (прокрутка)"
+    "change-api-key|Сменить ключ API провайдера"
+)
+
+get_launcher_state() {
+    if [ ! -f "$STATE_FILE" ]; then
+        return 1
+    fi
+    cat "$STATE_FILE"
+}
+
+save_launcher_state() {
+    local profile_id="$1"
+    local extra="$2"
+    
+    local timestamp=$(date -Iseconds)
+    local json="{\"profileId\":\"$profile_id\",\"updatedAt\":\"$timestamp\""
+    
+    if [ -n "$extra" ]; then
+        json="$json,$extra"
+    fi
+    
+    json="$json}"
+    
+    echo "$json" > "$STATE_FILE"
+}
+
+resolve_profile_from_state() {
+    local state="$1"
+    local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
+    
+    case "$profile_id" in
+        "zai-glm"|"nim-glm"|"nim-deepseek"|"custom-opencode-zai"|"custom-opencode-nim")
+            echo "$profile_id"
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+resolve_opencode_exe() {
+    # Проверяем глобальную установку npm
+    if command -v opencode &> /dev/null; then
+        which opencode
+        return 0
+    fi
+    
+    # Проверяем npm global bin
+    local npm_prefix
+    npm_prefix=$(npm config get prefix 2>/dev/null || true)
+    if [ -n "$npm_prefix" ] && [ -x "$npm_prefix/bin/opencode" ]; then
+        echo "$npm_prefix/bin/opencode"
+        return 0
+    fi
+    
+    # Проверяем ~/.npm-global
+    if [ -x "$HOME/.npm-global/bin/opencode" ]; then
+        echo "$HOME/.npm-global/bin/opencode"
+        return 0
+    fi
+    
+    echo ""
+    return 1
+}
+
+write_opencode_config() {
+    local provider="$1"
+    local model="$2"
+    local base_url="$3"
+    local api_key="$4"
+    
+    mkdir -p "$CONFIG_DIR"
+    
+    local config_path="$CONFIG_DIR/opencode.json"
+    
+    # Формируем JSON конфигурацию
+    local api_key_json=""
+    if [ -n "$api_key" ]; then
+        api_key_json="\"apiKey\": \"$api_key\","
+    fi
+    
+    cat > "$config_path" << EOFJSON
+{
+  "\$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "$provider": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "$provider",
+      "options": {
+        "baseURL": "$base_url",
+        $api_key_json
+        "apiKey": "$api_key"
+      },
+      "models": {
+        "$model": {
+          "name": "$model"
+        }
+      }
+    }
+  },
+  "model": "$provider/$model"
+}
+EOFJSON
+    
+    echo "$config_path"
+}
+
+get_zai_api_key() {
+    local key="${ZAI_API_KEY:-}"
+    if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
+        key="${OPENAI_API_KEY:-}"
+    fi
+    if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
+        echo -e "${YELLOW}Z.AI API ключ не задан. Задайте ZAI_API_KEY или выберите «Сменить ключ API провайдера».${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+get_nim_api_key() {
+    local key="${NVIDIA_NIM_API_KEY:-}"
+    if [ -z "$key" ]; then
+        echo -e "${YELLOW}NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY или выберите «Сменить ключ API провайдера».${RESET}" >&2
+        return 1
+    fi
+    echo "$key"
+}
+
+invoke_opencode_profile() {
+    local profile_id="$1"
+    
+    local opencode_exe
+    opencode_exe=$(resolve_opencode_exe) || true
+    if [ -z "$opencode_exe" ]; then
+        echo -e "${RED}OpenCode CLI не найден. Установите: npm install -g opencode-ai@latest${RESET}"
+        return 1
+    fi
+    
+    case "$profile_id" in
+        "zai-glm")
+            local api_key
+            api_key=$(get_zai_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "zai" "glm-4.7" "https://api.z.ai/api/openai/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-4.7)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "nim-glm")
+            local api_key
+            api_key=$(get_nim_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "nvidia-nim" "z-ai/glm4.7" "https://integrate.api.nvidia.com/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM GLM-4.7)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "nim-deepseek")
+            local api_key
+            api_key=$(get_nim_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "nvidia-nim" "deepseek-ai/deepseek-v3.1-terminus" "https://integrate.api.nvidia.com/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM DeepSeek V3.1 Terminus)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "custom-opencode-zai")
+            local state
+            state=$(get_launcher_state) || true
+            local model_id=$(echo "$state" | grep -o '"customModelId":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -z "$model_id" ]; then
+                echo -e "${RED}Нет customModelId. Выберите модель в пункте «Другая модель».${RESET}"
+                return 1
+            fi
+            
+            local api_key
+            api_key=$(get_zai_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "zai" "$model_id" "https://api.z.ai/api/openai/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (Z.AI custom: $model_id)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "custom-opencode-nim")
+            local state
+            state=$(get_launcher_state) || true
+            local model_id=$(echo "$state" | grep -o '"customModelId":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -z "$model_id" ]; then
+                echo -e "${RED}Нет customModelId. Выберите модель в пункте «Другая модель».${RESET}"
+                return 1
+            fi
+            
+            local api_key
+            api_key=$(get_nim_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "nvidia-nim" "$model_id" "https://integrate.api.nvidia.com/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (NVIDIA NIM custom: $model_id)…${RESET}"
+            "$opencode_exe"
+            ;;
+        *)
+            echo -e "${RED}Неизвестный профиль: $profile_id${RESET}"
+            return 1
+            ;;
+    esac
+}
+
+# ── Мастер выбора модели (упрощённый для Linux) ────────────────────────────────
+
+invoke_custom_model_wizard() {
+    local app_brand="$1"
+    
+    local prov_items=(
+        "zai|Z.AI — Coding / Anthropic (список моделей по вашему ключу)"
+        "nim|NVIDIA NIM — полный каталог (GET /v1/models)"
+    )
+    
+    while true; do
+        local prov_menu=()
+        for item in "${prov_items[@]}"; do
+            local label="${item##*|}"
+            prov_menu+=("$label")
+        done
+        
+        show_tui_framed_menu "$app_brand" "Другая модель" "Шаг 1 из 2 — выберите провайдера" "${prov_menu[@]}"
+        local prov_choice=$?
+        
+        if [ $prov_choice -eq 0 ]; then
+            return 1
+        fi
+        
+        local prov_source=$(echo "${prov_items[$((prov_choice-1))]}" | cut -d'|' -f1)
+        
+        local ids=()
+        local key=""
+        
+        if [ "$prov_source" = "zai" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога моделей Z.AI с API…"
+            key=$(get_zai_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+            
+            # Получаем список моделей через API
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" "https://api.z.ai/api/coding/paas/v4/models" 2>/dev/null) || true
+            if [ -z "$response" ]; then
+                response=$(curl -s -H "Authorization: Bearer $key" "https://api.z.ai/api/paas/v4/models" 2>/dev/null) || true
+            fi
+            
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+            
+            if [ ${#ids[@]} -eq 0 ]; then
+                ids=("glm-4.7" "glm-4.7-flash" "glm-4.7-flashx" "glm-4.6" "glm-4.5" "glm-5" "glm-5-turbo" "glm-5.1")
+            fi
+        elif [ "$prov_source" = "nim" ]; then
+            show_tui_wait_frame "$app_brand" "Загрузка каталога NVIDIA NIM…"
+            key=$(get_nim_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
+            
+            local response
+            response=$(curl -s -H "Authorization: Bearer $key" "https://integrate.api.nvidia.com/v1/models" 2>/dev/null) || true
+            
+            if [ -n "$response" ]; then
+                ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
+            fi
+        fi
+        
+        if [ ${#ids[@]} -eq 0 ]; then
+            echo -e "${RED}Провайдер вернул пустой список моделей.${RESET}"
+            read -p "Нажмите Enter…"
+            return 1
+        fi
+        
+        local model_menu=()
+        for id in "${ids[@]}"; do
+            model_menu+=("$id")
+        done
+        
+        show_tui_framed_menu "$app_brand" "Другая модель" "Шаг 2 из 2 — моделей: ${#ids[@]}" "${model_menu[@]}"
+        local model_choice=$?
+        
+        if [ $model_choice -eq 0 ]; then
+            continue
+        fi
+        
+        local model_id="${ids[$((model_choice-1))]}"
+        local prov="nim"
+        if [ "$prov_source" = "zai" ]; then
+            prov="zai"
+        fi
+        
+        echo "$prov|$model_id"
+        return 0
+    done
+}
+
+# ── Быстрый старт ────────────────────────────────────────────────────────────
+
+if [ "${OPENCODE_LAUNCHER_QUICK:-0}" = "1" ]; then
+    if state=$(get_launcher_state); then
+        if resolved_id=$(resolve_profile_from_state "$state"); then
+            invoke_opencode_profile "$resolved_id"
+            exit $?
+        fi
+    fi
+    
+    echo -e "${YELLOW}Нет сохранённого профиля. Один раз выберите модель в меню.${RESET}"
+    sleep 3
+    exit 2
+fi
+
+# ── Главное меню ─────────────────────────────────────────────────────────────
+
+while true; do
+    local state=$(get_launcher_state 2>/dev/null || true)
+    local last_id=$(resolve_profile_from_state "$state" 2>/dev/null || true)
+    
+    # Подготовка списка пунктов меню
+    local menu_items=()
+    for profile in "${PROFILES[@]}"; do
+        local label="${profile##*|}"
+        menu_items+=("$label")
+    done
+    
+    show_tui_framed_menu "OpenCode" "OpenCode — выбор провайдера" "Z.AI · NVIDIA NIM (OpenAI-compatible)" "${menu_items[@]}"
+    local choice=$?
+    
+    if [ $choice -eq 0 ]; then
+        echo -e "${YELLOW}Отменено.${RESET}"
+        exit 0
+    fi
+    
+    local profile_id=$(echo "${PROFILES[$((choice-1))]}" | cut -d'|' -f1)
+    
+    case "$profile_id" in
+        "change-api-key")
+            show_api_key_change_menu "OpenCode"
+            continue
+            ;;
+        "custom-model")
+            local wizard_result
+            wizard_result=$(invoke_custom_model_wizard "OpenCode") || {
+                echo -e "${YELLOW}Отменено.${RESET}"
+                exit 0
+            }
+            
+            local wiz_provider=$(echo "$wizard_result" | cut -d'|' -f1)
+            local wiz_model=$(echo "$wizard_result" | cut -d'|' -f2)
+            
+            local new_id="custom-opencode-nim"
+            if [ "$wiz_provider" = "zai" ]; then
+                new_id="custom-opencode-zai"
+            fi
+            
+            save_launcher_state "$new_id" "\"customModelId\":\"$wiz_model\""
+            invoke_opencode_profile "$new_id"
+            exit $?
+            ;;
+        "last")
+            if state=$(get_launcher_state); then
+                if resolved_id=$(resolve_profile_from_state "$state"); then
+                    profile_id="$resolved_id"
+                else
+                    echo -e "${RED}Сохранённый профиль не найден. Выберите провайдер один раз.${RESET}"
+                    read -p "Нажмите Enter..."
+                    exit 2
+                fi
+            else
+                echo -e "${RED}Сохранённый профиль не найден. Выберите провайдер один раз.${RESET}"
+                read -p "Нажмите Enter..."
+                exit 2
+            fi
+            ;;
+        *)
+            save_launcher_state "$profile_id"
+            ;;
+    esac
+    
+    invoke_opencode_profile "$profile_id"
+    exit $?
+done

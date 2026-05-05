@@ -1,6 +1,6 @@
 # Ручная установка: пошаговое руководство
 
-Полная инструкция для ручного развёртывания **Qwen Code** и **Claude Code** с облачными провайдерами **NVIDIA NIM** и **Z.AI** на **Windows** и **Linux**.
+Полная инструкция для ручного развёртывания **Qwen Code**, **Claude Code** и **OpenCode** с облачными провайдерами **NVIDIA NIM** и **Z.AI** на **Windows** и **Linux**.
 
 ---
 
@@ -28,22 +28,22 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                       Рабочая станция                         │
 │                                                              │
-│  ┌─────────────┐    ┌──────────────┐    ┌────────────────┐   │
-│  │  Qwen Code  │    │  Claude Code │    │  TUI Лаунчеры  │   │
-│  │  (OpenAI)   │    │  (Anthropic) │    │  (Меню выбора) │   │
-│  └──────┬──────┘    └──────┬───────┘    └────────────────┘   │
-│         │                  │                                  │
-│  ┌──────┴──────┐    ┌──────┴───────┐                         │
-│  │  LiteLLM    │    │ free-claude- │                         │
-│  │  :4000      │    │ code :8082   │                         │
-│  └──────┬──────┘    └──────┬───────┘                         │
-└─────────┼──────────────────┼─────────────────────────────────┘
-          │                  │
-          ▼                  ▼
-   ┌──────────────┐   ┌──────────────┐
-   │  NVIDIA NIM  │   │    Z.AI      │
-   │  (integrate) │   │  (api.z.ai)  │
-   └──────────────┘   └──────────────┘
+│  ┌─────────────┐    ┌──────────────┐    ┌──────────────┐     │
+│  │  Qwen Code  │    │  Claude Code │    │   OpenCode   │     │
+│  │  (OpenAI)   │    │  (Anthropic) │    │   (OpenAI)   │     │
+│  └──────┬──────┘    └──────┬───────┘    └──────┬───────┘     │
+│         │                  │                   │             │
+│  ┌──────┴──────┐    ┌──────┴───────┐           │             │
+│  │  LiteLLM    │    │ free-claude- │           │             │
+│  │  :4000      │    │ code :8082   │           │             │
+│  └──────┬──────┘    └──────┬───────┘           │             │
+└─────────┼──────────────────┼───────────────────┼─────────────┘
+          │                  │                   │
+          ▼                  ▼                   ▼
+   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+   │  NVIDIA NIM  │   │    Z.AI      │   │  NVIDIA NIM  │
+   │  (integrate) │   │  (api.z.ai)  │   │  (integrate) │
+   └──────────────┘   └──────────────┘   └──────────────┘
 ```
 
 **Потоки данных:**
@@ -54,6 +54,8 @@
 | Qwen Code | NVIDIA NIM | LiteLLM `127.0.0.1:4000` → `integrate.api.nvidia.com` |
 | Claude Code | Z.AI | Прямой HTTPS → `api.z.ai/api/anthropic` |
 | Claude Code | NVIDIA NIM | free-claude-code `127.0.0.1:8082` → `integrate.api.nvidia.com` |
+| OpenCode | Z.AI | Прямой HTTPS → `api.z.ai/api/openai/v1` (opencode.json) |
+| OpenCode | NVIDIA NIM | Прямой HTTPS → `integrate.api.nvidia.com/v1` (opencode.json) |
 
 ---
 
@@ -137,6 +139,20 @@ npm install -g @anthropic-ai/claude-code@latest
 ```bash
 claude --help
 ```
+
+### OpenCode
+
+```bash
+# Windows / Linux
+npm install -g opencode-ai@latest
+```
+
+Проверка:
+```bash
+opencode --help
+```
+
+OpenCode использует `opencode.json` конфигурацию (переменная `OPENCODE_CONFIG`) для подключения к OpenAI-compatible API. Лаунчер `run-opencode-launcher.ps1` (или `.sh`) автоматически генерирует конфиг при выборе провайдера.
 
 ---
 
@@ -417,6 +433,13 @@ $lnk.TargetPath = "cmd.exe"
 $lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$repoRoot\scripts\run-claude-cloud-launcher.ps1`""
 $lnk.WorkingDirectory = $repoRoot
 $lnk.Save()
+
+# OpenCode
+$lnk = $shell.CreateShortcut("$desktop\OpenCode (cloud).lnk")
+$lnk.TargetPath = "cmd.exe"
+$lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$repoRoot\scripts\run-opencode-launcher.ps1`""
+$lnk.WorkingDirectory = $repoRoot
+$lnk.Save()
 ```
 
 ### Вручную — Linux
@@ -451,13 +474,26 @@ Terminal=true
 Categories=Development;
 EOF
 chmod +x "$DESKTOP/Claude Code (cloud).desktop"
+
+# OpenCode
+cat > "$DESKTOP/OpenCode (cloud).desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OpenCode (cloud)
+Exec=bash "$REPO_ROOT/scripts/run-opencode-launcher.sh"
+Path=$REPO_ROOT
+Terminal=true
+Categories=Development;
+EOF
+chmod +x "$DESKTOP/OpenCode (cloud).desktop"
 ```
 
 ---
 
 ## 11. Управление API ключами через TUI
 
-В обоих лаунчерах (Qwen Code, Claude Code) есть встроенное меню для смены API ключей:
+Во всех лаунчерах (Qwen Code, Claude Code, OpenCode) есть встроенное меню для смены API ключей:
 
 1. Запустите ярлык
 2. Выберите **«Сменить ключ API провайдера»**

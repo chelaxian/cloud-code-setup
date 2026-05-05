@@ -1,6 +1,6 @@
 # cloud-code-setup
 
-**1-click развёртывание Qwen Code и Claude Code с облачными моделями (NVIDIA NIM, Z.AI)**
+**1-click развёртывание Qwen Code, Claude Code и OpenCode с облачными моделями (NVIDIA NIM, Z.AI)**
 
 Работает на Windows и Linux. Устанавливается одной командой в терминале.
 
@@ -34,7 +34,7 @@ cd cloud-code-setup
 ## Что делает инсталлятор
 
 1. **Проверяет зависимости** — git, Node.js, npm
-2. **Спрашивает** что установить: Qwen Code, Claude Code или оба
+2. **Спрашивает** что установить: Qwen Code, Claude Code, OpenCode или все три
 3. **Устанавливает CLI** через npm (если не установлен)
 4. **Запрашивает API ключи**:
    - NVIDIA NIM API ключ (можно пропустить)
@@ -58,8 +58,8 @@ cd cloud-code-setup
 
 | Провайдер | Модели | Для кого |
 |-----------|--------|----------|
-| **NVIDIA NIM** | GLM-4.7, DeepSeek V3.1 Terminus | Qwen Code, Claude Code |
-| **Z.AI** | GLM-4.7 | Qwen Code, Claude Code |
+| **NVIDIA NIM** | GLM-4.7, DeepSeek V3.1 Terminus | Qwen Code, Claude Code, OpenCode |
+| **Z.AI** | GLM-4.7 | Qwen Code, Claude Code, OpenCode |
 
 ### Где взять API ключи
 
@@ -76,6 +76,7 @@ cd cloud-code-setup
 
 - **Qwen Code (cloud)** — меню выбора модели/провайдера
 - **Claude Code (cloud)** — меню выбора провайдера
+- **OpenCode (cloud)** — меню выбора провайдера
 
 ### Смена API ключей
 
@@ -106,6 +107,8 @@ cloud-code-setup/
 │   ├── run-qwen-code-launcher.sh     # Qwen Code лаунчер (Linux)
 │   ├── run-claude-cloud-launcher.ps1  # Claude Code лаунчер (Windows)
 │   ├── run-claude-cloud-launcher.sh   # Claude Code лаунчер (Linux)
+│   ├── run-opencode-launcher.ps1      # OpenCode лаунчер (Windows)
+│   ├── run-opencode-launcher.sh       # OpenCode лаунчер (Linux)
 │   └── ...                             # Вспомогательные скрипты
 ├── qwen-sessions/             # Профили сессий Qwen Code
 │   ├── zai-glm47/

@@ -112,9 +112,24 @@ function Write-TuiBannerLMStudio {
   }
 }
 
+function Write-TuiBannerOpenCode {
+  param([int]$InnerWidth)
+  $lines = @(
+    " ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗ ██████╗ ██████╗ ███████╗"
+    "██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██╔═══██╗██╔══██╗██╔════╝"
+    "██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║   ██║██║  ██║█████╗  "
+    "██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║   ██║██║  ██║██╔══╝  "
+    "╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗╚██████╔╝██████╔╝███████╗"
+    " ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝"
+  )
+  foreach ($ln in $lines) {
+    Write-TuiRow -Text $ln -InnerWidth $InnerWidth -Fg DarkGreen
+  }
+}
+
 function Show-TuiFramedMenu {
   param(
-    [ValidateSet("Qwen", "Claude", "LlamaCpp", "LMStudio")]
+    [ValidateSet("Qwen", "Claude", "LlamaCpp", "LMStudio", "OpenCode")]
     [string]$AppBrand,
     [Parameter(Mandatory = $true)][string]$Title,
     [string]$Subtitle = "",
@@ -159,6 +174,7 @@ function Show-TuiFramedMenu {
       "Claude" { Write-TuiBannerClaude -InnerWidth $inner }
       "LlamaCpp" { Write-TuiBannerLlamaCpp -InnerWidth $inner }
       "LMStudio" { Write-TuiBannerLMStudio -InnerWidth $inner }
+      "OpenCode" { Write-TuiBannerOpenCode -InnerWidth $inner }
       default { Write-TuiBannerClaude -InnerWidth $inner }
     }
     Write-TuiRow -Text ("".PadRight($inner)) -InnerWidth $inner
@@ -240,7 +256,7 @@ function Show-TuiFramedMenu {
 
 function Show-TuiWaitFrame {
   param(
-    [ValidateSet("Qwen", "Claude", "LlamaCpp", "LMStudio")]
+    [ValidateSet("Qwen", "Claude", "LlamaCpp", "LMStudio", "OpenCode")]
     [string]$AppBrand,
     [Parameter(Mandatory = $true)][string]$Message
   )
@@ -257,6 +273,7 @@ function Show-TuiWaitFrame {
     "Claude" { Write-TuiBannerClaude -InnerWidth $inner }
     "LlamaCpp" { Write-TuiBannerLlamaCpp -InnerWidth $inner }
     "LMStudio" { Write-TuiBannerLMStudio -InnerWidth $inner }
+    "OpenCode" { Write-TuiBannerOpenCode -InnerWidth $inner }
     default { Write-TuiBannerClaude -InnerWidth $inner }
   }
   Write-TuiRow -Text ("".PadRight($inner)) -InnerWidth $inner

@@ -78,6 +78,30 @@ draw_tui_banner_claude() {
     done
 }
 
+draw_tui_banner_opencode() {
+    local inner_width="$1"
+    local lines=(
+        " ██████╗ ██████╗ ███████╗███╗   ██╗ ██████╗ ██████╗ ██████╗ ███████╗"
+        "██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██╔═══██╗██╔══██╗██╔════╝"
+        "██║   ██║██████╔╝█████╗  ██╔██╗ ██║██║     ██║   ██║██║  ██║█████╗  "
+        "██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║██║     ██║   ██║██║  ██║██╔══╝  "
+        "╚██████╔╝██║     ███████╗██║ ╚████║╚██████╗╚██████╔╝██████╔╝███████╗"
+        " ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝"
+    )
+    
+    for line in "${lines[@]}"; do
+        local len=${#line}
+        if [ $len -gt $inner_width ]; then
+            line="${line:0:$((inner_width-1))}…"
+        else
+            local pad_left=$(( (inner_width - len) / 2 ))
+            local pad_right=$((inner_width - len - pad_left))
+            line=$(printf '%*s%s%*s' "$pad_left" '' "$line" "$pad_right" '')
+        fi
+        echo -e "${GREEN}║${line}║${RESET}"
+    done
+}
+
 show_tui_framed_menu() {
     local app_brand="$1"
     local title="$2"
@@ -95,6 +119,8 @@ show_tui_framed_menu() {
     local banner_color="$CYAN"
     if [ "$app_brand" = "Claude" ]; then
         banner_color="$MAGENTA"
+    elif [ "$app_brand" = "OpenCode" ]; then
+        banner_color="$GREEN"
     fi
     
     while true; do
@@ -109,6 +135,8 @@ show_tui_framed_menu() {
             draw_tui_banner_qwen "$inner_width"
         elif [ "$app_brand" = "Claude" ]; then
             draw_tui_banner_claude "$inner_width"
+        elif [ "$app_brand" = "OpenCode" ]; then
+            draw_tui_banner_opencode "$inner_width"
         fi
         
         echo -e "${banner_color}║$(printf '%*s' $inner_width)║${RESET}"
@@ -163,6 +191,8 @@ show_tui_wait_frame() {
     local banner_color="$CYAN"
     if [ "$app_brand" = "Claude" ]; then
         banner_color="$MAGENTA"
+    elif [ "$app_brand" = "OpenCode" ]; then
+        banner_color="$GREEN"
     fi
     
     clear
@@ -173,6 +203,8 @@ show_tui_wait_frame() {
         draw_tui_banner_qwen "$inner_width"
     elif [ "$app_brand" = "Claude" ]; then
         draw_tui_banner_claude "$inner_width"
+    elif [ "$app_brand" = "OpenCode" ]; then
+        draw_tui_banner_opencode "$inner_width"
     fi
     
     echo -e "${banner_color}║$(printf '%*s' $inner_width)║${RESET}"

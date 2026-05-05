@@ -74,7 +74,7 @@ function Set-ProviderApiKey {
 
 function Show-ApiKeyChangeMenu {
   param(
-    [ValidateSet("Qwen", "Claude")]
+    [ValidateSet("Qwen", "Claude", "OpenCode")]
     [string]$AppBrand = "Qwen"
   )
 

@@ -31,7 +31,7 @@ function Resolve-NimKeyForWizard {
 function Invoke-LauncherCustomModelWizard {
   param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("Qwen", "Claude")]
+    [ValidateSet("Qwen", "Claude", "OpenCode")]
     [string]$App
   )
 

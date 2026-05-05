@@ -95,22 +95,25 @@ step "ЧТО УСТАНОВИТЬ?"
 
 echo -e "  ${GREEN}[1]${RESET} Qwen Code (cloud)"
 echo -e "  ${GREEN}[2]${RESET} Claude Code (cloud)"
-echo -e "  ${GREEN}[3]${RESET} Оба"
+echo -e "  ${GREEN}[3]${RESET} OpenCode (cloud)"
+echo -e "  ${GREEN}[4]${RESET} Все три"
 echo -e "  ${GRAY}[0]${RESET} Выход"
 echo ""
 
-read -p "Ваш выбор [3]: " install_choice
-install_choice="${install_choice:-3}"
+read -p "Ваш выбор [4]: " install_choice
+install_choice="${install_choice:-4}"
 
 INSTALL_QWEN=false
 INSTALL_CLAUDE=false
+INSTALL_OPENCODE=false
 
 case "$install_choice" in
     1) INSTALL_QWEN=true ;;
     2) INSTALL_CLAUDE=true ;;
-    3) INSTALL_QWEN=true; INSTALL_CLAUDE=true ;;
+    3) INSTALL_OPENCODE=true ;;
+    4) INSTALL_QWEN=true; INSTALL_CLAUDE=true; INSTALL_OPENCODE=true ;;
     0) echo -e "${YELLOW}Выход.${RESET}"; exit 0 ;;
-    *) warn "Неверный выбор. Устанавливаем оба."; INSTALL_QWEN=true; INSTALL_CLAUDE=true ;;
+    *) warn "Неверный выбор. Устанавливаем все три."; INSTALL_QWEN=true; INSTALL_CLAUDE=true; INSTALL_OPENCODE=true ;;
 esac
 
 # ─── Установка CLI ───────────────────────────────────────────────────────────
@@ -139,6 +142,19 @@ if $INSTALL_CLAUDE; then
             ok "Claude Code CLI установлен: $(which claude 2>/dev/null)"
         else
             warn "Не удалось установить Claude Code CLI. Установите вручную: npm i -g @anthropic-ai/claude-code"
+        fi
+    fi
+fi
+
+if $INSTALL_OPENCODE; then
+    if command -v opencode >/dev/null 2>&1; then
+        ok "OpenCode CLI: $(which opencode)"
+    else
+        echo -e "${CYAN}Установка OpenCode CLI…${RESET}"
+        if npm install -g opencode-ai@latest 2>/dev/null; then
+            ok "OpenCode CLI установлен: $(which opencode 2>/dev/null)"
+        else
+            warn "Не удалось установить OpenCode CLI. Установите вручную: npm i -g opencode-ai@latest"
         fi
     fi
 fi
@@ -311,6 +327,13 @@ if $INSTALL_CLAUDE; then
     fi
 fi
 
+if $INSTALL_OPENCODE; then
+    LAUNCHER="$SCRIPTS_DIR/run-opencode-launcher.sh"
+    if [ -f "$LAUNCHER" ]; then
+        make_desktop_entry "OpenCode (cloud)" "$LAUNCHER"
+    fi
+fi
+
 # ─── Итоги ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -321,8 +344,9 @@ echo ""
 echo -e "${GRAY}Репозиторий: $INSTALL_DIR${RESET}"
 echo ""
 echo -e "${CYAN}Ярлыки на рабочем столе:${RESET}"
-if $INSTALL_QWEN;  then echo -e "${GREEN}  * Qwen Code (cloud)${RESET}"; fi
-if $INSTALL_CLAUDE; then echo -e "${GREEN}  * Claude Code (cloud)${RESET}"; fi
+if $INSTALL_QWEN;     then echo -e "${GREEN}  * Qwen Code (cloud)${RESET}"; fi
+if $INSTALL_CLAUDE;   then echo -e "${GREEN}  * Claude Code (cloud)${RESET}"; fi
+if $INSTALL_OPENCODE; then echo -e "${GREEN}  * OpenCode (cloud)${RESET}"; fi
 echo ""
 echo -e "${YELLOW}ПРИМЕЧАНИЯ:${RESET}"
 echo -e "${GRAY}  - Выполните: source ~/.bashrc  (или перезапустите терминал)${RESET}"

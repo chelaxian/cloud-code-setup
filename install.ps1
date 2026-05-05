@@ -102,23 +102,26 @@ Write-Status "══════════════════════
 Write-Host ""
 Write-Status "  [1] Qwen Code (cloud)" "Green"
 Write-Status "  [2] Claude Code (cloud)" "Green"
-Write-Status "  [3] Оба" "Green"
+Write-Status "  [3] OpenCode (cloud)" "Green"
+Write-Status "  [4] Все три" "Green"
 Write-Status "  [0] Выход" "Gray"
 Write-Host ""
 
-$installChoice = Read-Host "Ваш выбор [3]"
+$installChoice = Read-Host "Ваш выбор [4]"
 
-if ([string]::IsNullOrWhiteSpace($installChoice)) { $installChoice = "3" }
+if ([string]::IsNullOrWhiteSpace($installChoice)) { $installChoice = "4" }
 
 $installQwen = $false
 $installClaude = $false
+$installOpenCode = $false
 
 switch ($installChoice) {
     "1" { $installQwen = $true }
     "2" { $installClaude = $true }
-    "3" { $installQwen = $true; $installClaude = $true }
+    "3" { $installOpenCode = $true }
+    "4" { $installQwen = $true; $installClaude = $true; $installOpenCode = $true }
     "0" { Write-Status "Выход." "Yellow"; exit 0 }
-    default { Write-Status "Неверный выбор. Устанавливаем оба." "Yellow"; $installQwen = $true; $installClaude = $true }
+    default { Write-Status "Неверный выбор. Устанавливаем все три." "Yellow"; $installQwen = $true; $installClaude = $true; $installOpenCode = $true }
 }
 
 # ─── Установка CLI ───────────────────────────────────────────────────────────
@@ -158,6 +161,20 @@ if ($installClaude) {
         Write-Status "  [OK] Claude Code CLI: $($claudeCmd.Source)" "Green"
     } else {
         Write-Status "  [WARN] Claude Code CLI не установлен. Установите вручную: npm i -g @anthropic-ai/claude-code" "Yellow"
+    }
+}
+
+if ($installOpenCode) {
+    Write-Status "Установка OpenCode CLI…" "Cyan"
+    $ocCmd = Get-Command opencode -ErrorAction SilentlyContinue
+    if (-not $ocCmd) {
+        npm install -g opencode-ai@latest 2>&1 | Out-Null
+        $ocCmd = Get-Command opencode -ErrorAction SilentlyContinue
+    }
+    if ($ocCmd) {
+        Write-Status "  [OK] OpenCode CLI: $($ocCmd.Source)" "Green"
+    } else {
+        Write-Status "  [WARN] OpenCode CLI не установлен. Установите вручную: npm i -g opencode-ai@latest" "Yellow"
     }
 }
 
@@ -313,6 +330,18 @@ if ($installClaude) {
     }
 }
 
+if ($installOpenCode) {
+    $launcher = Join-Path $scriptsDir "run-opencode-launcher.ps1"
+    if (Test-Path -LiteralPath $launcher) {
+        $lnk = $shell.CreateShortcut((Join-Path $desktop "OpenCode (cloud).lnk"))
+        $lnk.TargetPath = $psExe
+        $lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
+        $lnk.WorkingDirectory = $InstallDir
+        $lnk.Save()
+        Write-Status "  [OK] OpenCode (cloud).lnk" "Green"
+    }
+}
+
 Write-Host ""
 
 # ─── Итоги ───────────────────────────────────────────────────────────────────
@@ -326,6 +355,7 @@ Write-Host ""
 Write-Status "Ярлыки на рабочем столе:" "Cyan"
 if ($installQwen)  { Write-Status "  * Qwen Code (cloud)" "Green" }
 if ($installClaude) { Write-Status "  * Claude Code (cloud)" "Green" }
+if ($installOpenCode) { Write-Status "  * OpenCode (cloud)" "Green" }
 Write-Host ""
 Write-Status "ПРИМЕЧАНИЯ:" "Yellow"
 Write-Status "  - Перезапустите терминал, чтобы переменные окружения вступили в силу" "Gray"
