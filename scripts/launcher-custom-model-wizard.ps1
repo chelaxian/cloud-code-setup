@@ -59,7 +59,7 @@ function Invoke-LauncherCustomModelWizard {
     [pscustomobject]@{ Id = "nim"; Label = "NVIDIA NIM — полный каталог (GET /v1/models, все ID)" }
     [pscustomobject]@{ Id = "nim-bundled"; Label = "NVIDIA NIM — только free/preview (API ∩ встроенный список ~50)" }
     [pscustomobject]@{ Id = "nim-free"; Label = "NVIDIA NIM — free/preview (только статический список, без API)" }
-    [pscustomobject]@{ Id = "groq"; Label = "Groq — полный каталог моделей (GET /v1/models, заблокирован в РФ)" }
+    [pscustomobject]@{ Id = "groq"; Label = "Groq — полный каталог моделей (GET /v1/models)" }
     [pscustomobject]@{ Id = "groq-free"; Label = "Groq — только бесплатные модели (статический список)" }
     [pscustomobject]@{ Id = "openrouter"; Label = "OpenRouter — полный каталог моделей (GET /v1/models)" }
     [pscustomobject]@{ Id = "openrouter-free"; Label = "OpenRouter — только бесплатные модели (статический список)" }
