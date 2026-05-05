@@ -17,8 +17,9 @@
 9. [claude-mem (опционально)](#9-claude-mem-опционально)
 10. [Создание ярлыков](#10-создание-ярлыков)
 11. [Управление API ключами через TUI](#11-управление-api-ключами-через-tui)
-12. [Проверка установки](#12-проверка-установки)
-13. [Устранение проблем](#13-устранение-проблем)
+12. [Нативный логин](#12-нативный-логин)
+13. [Проверка установки](#13-проверка-установки)
+14. [Устранение проблем](#14-устранение-проблем)
 
 ---
 
@@ -52,10 +53,15 @@
 |-----|-----------|---------|
 | Qwen Code | Z.AI | Прямой HTTPS → `api.z.ai/api/openai/v1` |
 | Qwen Code | NVIDIA NIM | LiteLLM `127.0.0.1:4000` → `integrate.api.nvidia.com` |
+| Qwen Code | Groq | Прямой HTTPS → `api.groq.com/openai/v1` |
+| Qwen Code | OpenRouter | Прямой HTTPS → `openrouter.ai/api/v1` |
 | Claude Code | Z.AI | Прямой HTTPS → `api.z.ai/api/anthropic` |
 | Claude Code | NVIDIA NIM | free-claude-code `127.0.0.1:8082` → `integrate.api.nvidia.com` |
+| Claude Code | OpenRouter | free-claude-code `127.0.0.1:8082` → `openrouter.ai` |
 | OpenCode | Z.AI | Прямой HTTPS → `api.z.ai/api/openai/v1` (opencode.json) |
 | OpenCode | NVIDIA NIM | Прямой HTTPS → `integrate.api.nvidia.com/v1` (opencode.json) |
+| OpenCode | Groq | Прямой HTTPS → `api.groq.com/openai/v1` (opencode.json) |
+| OpenCode | OpenRouter | Прямой HTTPS → `openrouter.ai/api/v1` (opencode.json) |
 
 ---
 
@@ -169,7 +175,7 @@ OpenCode использует `opencode.json` конфигурацию (пере
 
 ### Windows: переменные пользователя
 
-**Способ 1 — через установщик:**
+**Способ 1 — через лаунчер:**
 
 Запустите ярлык и выберите "Сменить ключ API провайдера".
 
@@ -179,12 +185,14 @@ OpenCode использует `opencode.json` конфигурацию (пере
 # Сохранить ключ (перезапустите терминал после)
 [Environment]::SetEnvironmentVariable("NVIDIA_NIM_API_KEY", "ваш_ключ", "User")
 [Environment]::SetEnvironmentVariable("ZAI_API_KEY", "ваш_ключ", "User")
+[Environment]::SetEnvironmentVariable("GROQ_API_KEY", "ваш_ключ", "User")
+[Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", "ваш_ключ", "User")
 ```
 
 **Способ 3 — через GUI:**
 
 1. Win+R → `sysdm.cpl` → Дополнительно → Переменные среды
-2. Добавьте пользовательские переменные `NVIDIA_NIM_API_KEY` и `ZAI_API_KEY`
+2. Добавьте пользовательские переменные `NVIDIA_NIM_API_KEY`, `ZAI_API_KEY`, `GROQ_API_KEY`, `OPENROUTER_API_KEY`
 
 ### Linux: ~/.bashrc / ~/.zshrc
 
@@ -192,10 +200,26 @@ OpenCode использует `opencode.json` конфигурацию (пере
 # Добавьте в конец ~/.bashrc (или ~/.zshrc)
 export NVIDIA_NIM_API_KEY="ваш_ключ"
 export ZAI_API_KEY="ваш_ключ"
+export GROQ_API_KEY="ваш_ключ"
+export OPENROUTER_API_KEY="ваш_ключ"
 
 # Применить в текущей сессии
 source ~/.bashrc
 ```
+
+### Нативный логин (без API-ключей)
+
+Каждый лаунчер поддерживает авторизацию через нативный OAuth/браузер:
+
+| Лаунчер | Пункт меню | Команда |
+|---------|-----------|---------|
+| **Qwen Code** | Нативный логин → Qwen OAuth | `qwen auth qwen-oauth` (браузер) |
+| **Qwen Code** | Нативный логин → Coding Plan | `qwen auth coding-plan` (API-ключ Alibaba Cloud) |
+| **Claude Code** | Нативный логин → Claude подписка | `claude auth login --claudeai` (OAuth, браузер) |
+| **Claude Code** | Нативный логин → Anthropic Console | `claude auth login --console` (API-биллинг, браузер) |
+| **OpenCode** | Нативный логин → Providers | `opencode providers login` (интерактивный выбор) |
+
+Для использования нативного логина需要有 платная подписка на соответствующий сервис (Claude Pro/Max, Qwen Coding Plan и т.д.).
 
 ### Переменные окружения (справка)
 
@@ -203,6 +227,8 @@ source ~/.bashrc
 |-----------|-----------|
 | `NVIDIA_NIM_API_KEY` | Доступ к NVIDIA integrate API |
 | `ZAI_API_KEY` | Z.AI Coding / Anthropic-совместимые вызовы |
+| `GROQ_API_KEY` | Groq API (бесплатно, 14400 запросов/день) |
+| `OPENROUTER_API_KEY` | OpenRouter API (бесплатные и платные модели) |
 
 **Не коммитьте значения ключей в git.**
 
@@ -499,7 +525,7 @@ chmod +x "$DESKTOP/OpenCode (cloud).desktop"
 
 1. Запустите ярлык
 2. Выберите **«Сменить ключ API провайдера»**
-3. Выберите провайдера: **NVIDIA NIM** или **Z.AI**
+3. Выберите провайдера: **NVIDIA NIM**, **Z.AI**, **Groq** или **OpenRouter**
 4. Текущий ключ показан замаскированным (например `nv1234...5678ab`)
 5. Введите новый ключ (скрытый ввод)
 6. **ESC** — вернуться в предыдущее меню
@@ -510,7 +536,37 @@ chmod +x "$DESKTOP/OpenCode (cloud).desktop"
 
 ---
 
-## 12. Проверка установки
+## 12. Нативный логин
+
+Каждый лаунчер поддерживает нативную авторизацию (OAuth через браузер), если у вас есть платная подписка:
+
+### Qwen Code
+
+| Способ | Описание |
+|--------|----------|
+| **Qwen OAuth** | Авторизация через браузер (подписка Qwen) |
+| **Coding Plan** | Alibaba Cloud Coding Plan (API-ключ, регионы china/global) |
+
+Выберите в меню **«Нативный логин (Qwen OAuth / Coding Plan)»** → нужный способ.
+
+### Claude Code
+
+| Способ | Описание |
+|--------|----------|
+| **Claude подписка** | OAuth через браузер (Claude Pro / Max) |
+| **Anthropic Console** | API-биллинг через Anthropic Console |
+
+Выберите в меню **«Нативный логин (Anthropic OAuth / Console)»** → нужный способ.
+
+### OpenCode
+
+Интерактивное меню `opencode providers login` с выбором провайдера и метода входа.
+
+Выберите в меню **«Нативный логин (OpenCode Providers)»**.
+
+---
+
+## 13. Проверка установки
 
 ### Проверка зависимостей
 
@@ -521,6 +577,7 @@ node --version
 npm --version
 qwen --help      # если установлен Qwen Code
 claude --help    # если установлен Claude Code
+opencode --help  # если установлен OpenCode
 ```
 
 ### Проверка API ключей
@@ -529,12 +586,16 @@ claude --help    # если установлен Claude Code
 ```powershell
 [Environment]::GetEnvironmentVariable("NVIDIA_NIM_API_KEY", "User")
 [Environment]::GetEnvironmentVariable("ZAI_API_KEY", "User")
+[Environment]::GetEnvironmentVariable("GROQ_API_KEY", "User")
+[Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
 ```
 
 **Linux:**
 ```bash
 echo $NVIDIA_NIM_API_KEY
 echo $ZAI_API_KEY
+echo $GROQ_API_KEY
+echo $OPENROUTER_API_KEY
 ```
 
 ### Проверка LiteLLM (если установлен)
@@ -560,7 +621,7 @@ qwen
 
 ---
 
-## 13. Устранение проблем
+## 14. Устранение проблем
 
 ### Windows: «Политика выполнения скриптов»
 
@@ -614,6 +675,30 @@ chmod +x ~/cloud-code-setup/scripts/*.sh
 - **`tool_choice=auto`** на бэкенде без поддержки → автоматически `none`
 - **Длинная история** при маленьком контексте → автоматическая обрезка
 
+### Groq: «max_tokens must be less than or equal to 32768» / «Request too large»
+
+Groq бесплатный тариф имеет жёсткие лимиты TPM (tokens per minute). Лаунчеры автоматически урезают контекст:
+- **Qwen Code**: `contextWindowSize=8192`, `max_tokens=4096`, `skipStartupContext=true`
+- **OpenCode**: `maxTokens=4096`, `contextLength=8192`
+
+Если ошибка повторяется — подождите 1-2 минуты (сброс rate limit) или используйте другую модель.
+
+### OpenRouter: «403 Provider returned error» / «429 Too Many Requests»
+
+OpenRouter имеет лимиты: ~20 RPM, ~50 RPD для бесплатных моделей. Лаунчеры автоматически урезают контекст:
+- **Qwen Code**: `contextWindowSize=16384`, `max_tokens=8192`, `skipStartupContext=true`
+- **OpenCode**: `maxTokens=8192`, `contextLength=16384`
+
+Если ошибка повторяется — подождите или используйте платный API-ключ.
+
+### Очистка памяти claude-mem
+
+Если во время тестов память `claude-mem` забилась:
+```powershell
+# Windows
+.\scripts\clear-claude-mem.ps1
+```
+
 ---
 
 ## Быстрый чеклист
@@ -628,10 +713,12 @@ chmod +x ~/cloud-code-setup/scripts/*.sh
 - [ ] `ZAI_API_KEY` задан
 - [ ] Ярлыки созданы (через `install.ps1` / `install.sh`)
 
-### Полная установка (Z.AI + NIM)
+### Полная установка (Z.AI + NIM + Groq + OpenRouter)
 
 - [ ] Всё из минимальной установки
 - [ ] `NVIDIA_NIM_API_KEY` задан
+- [ ] `GROQ_API_KEY` задан
+- [ ] `OPENROUTER_API_KEY` задан
 - [ ] LiteLLM установлен и настроен (`:4000`)
 - [ ] free-claude-code клонирован и зависимости установлены
 - [ ] (Опционально) claude-mem запущен (`:37777`)

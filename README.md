@@ -92,6 +92,15 @@ cd cloud-code-setup
 2. Введите новый ключ
 3. Ключ сохраняется в переменных окружения
 
+### Нативный логин (OAuth)
+
+Если у вас есть платная подписка, авторизуйтесь через браузер:
+
+1. Выберите в меню лаунчера **«Нативный логин»**
+2. **Qwen Code**: Qwen OAuth или Alibaba Cloud Coding Plan
+3. **Claude Code**: Claude подписка (OAuth) или Anthropic Console
+4. **OpenCode**: интерактивный выбор провайдера через `opencode providers login`
+
 ---
 
 ## Структура проекта
