@@ -58,8 +58,8 @@ cd cloud-code-setup
 
 | Провайдер | Модели | Для кого |
 |-----------|--------|----------|
-| **NVIDIA NIM** | GLM-4.7, DeepSeek V3.1 Terminus | Qwen Code, Claude Code, OpenCode |
-| **Z.AI** | GLM-4.7 | Qwen Code, Claude Code, OpenCode |
+| **NVIDIA NIM** | GLM-4.7, Qwen3.5-122B-A10B | Qwen Code, Claude Code, OpenCode |
+| **Z.AI** | GLM-4.7, GLM-5.1 | Qwen Code, Claude Code, OpenCode |
 
 ### Где взять API ключи
 

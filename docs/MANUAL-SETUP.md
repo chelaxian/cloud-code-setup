@@ -244,15 +244,15 @@ source ~/.bashrc
 }
 ```
 
-### NIM DeepSeek — `qwen-sessions/nim-deepseek-v31/.qwen/settings.json`
+### NIM Qwen3.5-122B — `qwen-sessions/nim-qwen35-122b/.qwen/settings.json`
 
 ```json
 {
   "modelProviders": {
     "openai": [
       {
-        "id": "nim-deepseek-v3.1-terminus-tools",
-        "name": "NVIDIA NIM DeepSeek V3.1 Terminus (LiteLLM)",
+        "id": "nim-qwen3.5-122b-a10b-tools",
+        "name": "NVIDIA NIM Qwen3.5-122B-A10B (LiteLLM)",
         "baseUrl": "http://127.0.0.1:4000/v1",
         "envKey": "NVIDIA_NIM_API_KEY"
       }
@@ -297,9 +297,9 @@ model_list:
       model: openai/z-ai/glm4.7
       api_base: https://integrate.api.nvidia.com/v1
       api_key: os.environ/NVIDIA_NIM_API_KEY
-  - model_name: nim-deepseek-v3.1-terminus-tools
+  - model_name: nim-qwen3.5-122b-a10b-tools
     litellm_params:
-      model: openai/deepseek-ai/deepseek-v3.1-terminus
+      model: openai/qwen/qwen3.5-122b-a10b
       api_base: https://integrate.api.nvidia.com/v1
       api_key: os.environ/NVIDIA_NIM_API_KEY
 
@@ -363,7 +363,7 @@ uv sync
 | Модель | Порт |
 |--------|------|
 | GLM-4.7 NIM | 8082 |
-| DeepSeek Terminus | 8083 |
+| Qwen3.5-122B-A10B | 8083 |
 
 ### Запуск прокси
 
@@ -604,7 +604,7 @@ chmod +x ~/cloud-code-setup/scripts/*.sh
 
 Для моделей **вне белого списка** Claude Code запускается с `--tools minimal`. Белый список:
 - `z-ai/glm4.7`
-- `deepseek-ai/deepseek-v3.1-terminus`
+- `qwen/qwen3.5-122b-a10b`
 
 ### Ошибка 400 от NIM API
 
