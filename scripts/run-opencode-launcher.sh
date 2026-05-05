@@ -219,7 +219,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "groq" "llama-3.3-70b-versatile" "https://api.groq.com/openai/v1" "$api_key" 32768 131072)
+            config_path=$(write_opencode_config "groq" "llama-3.3-70b-versatile" "https://api.groq.com/openai/v1" "$api_key" 4096 8192)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (Groq Llama 3.3 70B)…${RESET}"
             "$opencode_exe"
@@ -231,7 +231,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "groq" "qwen/qwen3-32b" "https://api.groq.com/openai/v1" "$api_key" 40960 131072)
+            config_path=$(write_opencode_config "groq" "qwen/qwen3-32b" "https://api.groq.com/openai/v1" "$api_key" 4096 8192)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (Groq Qwen3 32B)…${RESET}"
             "$opencode_exe"
@@ -243,7 +243,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "openrouter" "qwen/qwen3-coder:free" "https://openrouter.ai/api/v1" "$api_key" 32768 131072)
+            config_path=$(write_opencode_config "openrouter" "qwen/qwen3-coder:free" "https://openrouter.ai/api/v1" "$api_key" 8192 16384)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (OpenRouter Qwen3 Coder)…${RESET}"
             "$opencode_exe"
@@ -298,7 +298,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "groq" "$model_id" "https://api.groq.com/openai/v1" "$api_key" 32768 131072)
+            config_path=$(write_opencode_config "groq" "$model_id" "https://api.groq.com/openai/v1" "$api_key" 4096 8192)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (Groq custom: $model_id)…${RESET}"
             "$opencode_exe"
@@ -317,7 +317,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "openrouter" "$model_id" "https://openrouter.ai/api/v1" "$api_key" 32768 131072)
+            config_path=$(write_opencode_config "openrouter" "$model_id" "https://openrouter.ai/api/v1" "$api_key" 8192 16384)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (OpenRouter custom: $model_id)…${RESET}"
             "$opencode_exe"

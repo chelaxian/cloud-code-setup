@@ -304,7 +304,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model $mid.Trim() -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model $mid.Trim() -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 4096 -ContextLength 8192
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq custom: $($mid.Trim()))…" -ForegroundColor Cyan
       & $opencodeExe
@@ -321,7 +321,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model $mid.Trim() -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model $mid.Trim() -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 16384
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (OpenRouter custom: $($mid.Trim()))…" -ForegroundColor Cyan
       & $opencodeExe
@@ -333,7 +333,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "llama-3.3-70b-versatile" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "llama-3.3-70b-versatile" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 4096 -ContextLength 8192
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq Llama 3.3 70B)…" -ForegroundColor Cyan
       & $opencodeExe
@@ -345,7 +345,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "qwen/qwen3-32b" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 40960 -ContextLength 131072
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "qwen/qwen3-32b" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 4096 -ContextLength 8192
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq Qwen3 32B)…" -ForegroundColor Cyan
       & $opencodeExe
@@ -357,7 +357,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 16384
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (OpenRouter Qwen3 Coder)…" -ForegroundColor Cyan
       & $opencodeExe
