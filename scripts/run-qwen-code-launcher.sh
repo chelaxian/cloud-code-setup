@@ -352,15 +352,37 @@ while true; do
 
             case "$login_id" in
                 "qwen-oauth")
-                    echo -e "${CYAN}Запуск Qwen OAuth (откроется браузер)…${RESET}"
+                    clear
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo -e "${CYAN}  Qwen OAuth — авторизация через браузер${RESET}"
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo ""
+                    echo -e "${YELLOW}  Откроется браузер. Завершите авторизацию в нём.${RESET}"
+                    echo -e "${YELLOW}  Для этого нужна подписка Qwen (qwen.ai).${RESET}"
+                    echo ""
                     qwen auth qwen-oauth
-                    echo -e "${GREEN}Готово. Нажмите Enter…${RESET}"
+                    echo ""
+                    echo -e "${GREEN}  Текущий статус:${RESET}"
+                    qwen auth status
+                    echo ""
+                    echo -e "${GREEN}Нажмите Enter для возврата в меню…${RESET}"
                     read
                     ;;
                 "coding-plan")
-                    echo -e "${CYAN}Запуск Alibaba Cloud Coding Plan авторизации…${RESET}"
+                    clear
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo -e "${CYAN}  Alibaba Cloud Coding Plan${RESET}"
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo ""
+                    echo -e "${YELLOW}  Регион: china или global${RESET}"
+                    echo -e "${YELLOW}  Потребуется API-ключ от Alibaba Cloud.${RESET}"
+                    echo ""
                     qwen auth coding-plan
-                    echo -e "${GREEN}Готово. Нажмите Enter…${RESET}"
+                    echo ""
+                    echo -e "${GREEN}  Текущий статус:${RESET}"
+                    qwen auth status
+                    echo ""
+                    echo -e "${GREEN}Нажмите Enter для возврата в меню…${RESET}"
                     read
                     ;;
             esac

@@ -295,7 +295,7 @@ function Ensure-FreeClaudeCodeProxy {
     $env:ANTHROPIC_AUTH_TOKEN = $AuthToken
 
     foreach ($ek in $ExtraEnv.Keys) {
-      Set-Item -Path "env:$ek" -Value $ExtraEnv[$k]
+      Set-Item -Path "env:$ek" -Value $ExtraEnv[$ek]
     }
 
     # Start proxy in background with logs.

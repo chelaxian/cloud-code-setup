@@ -229,15 +229,41 @@ while ($true) {
     if (-not $loginChoice) { continue }
     switch ([string]$loginChoice.Id) {
       "qwen-oauth" {
-        Write-Host "Запуск Qwen OAuth (откроется браузер)…" -ForegroundColor Cyan
+        Clear-Host
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "  Qwen OAuth — авторизация через браузер" -ForegroundColor Cyan
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Откроется браузер. Завершите авторизацию в нём." -ForegroundColor Yellow
+        Write-Host "  Для этого нужна подписка Qwen (qwen.ai)." -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "  Если браузер не открылся — проверьте что у вас" -ForegroundColor DarkGray
+        Write-Host "  есть аккаунт на qwen.ai и подписка." -ForegroundColor DarkGray
+        Write-Host ""
+        Write-Host "  Запуск..." -ForegroundColor Cyan
         & qwen auth qwen-oauth
-        Write-Host "Готово. Нажмите любую клавишу…" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  Авторизация завершена. Текущий статус:" -ForegroundColor Green
+        & qwen auth status
+        Write-Host ""
+        Write-Host "Нажмите любую клавишу для возврата в меню…" -ForegroundColor Green
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
       }
       "coding-plan" {
-        Write-Host "Запуск Alibaba Cloud Coding Plan авторизации…" -ForegroundColor Cyan
+        Clear-Host
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "  Alibaba Cloud Coding Plan" -ForegroundColor Cyan
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Регион: china или global" -ForegroundColor Yellow
+        Write-Host "  Потребуется API-ключ от Alibaba Cloud." -ForegroundColor Yellow
+        Write-Host ""
         & qwen auth coding-plan
-        Write-Host "Готово. Нажмите любую клавишу…" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  Текущий статус:" -ForegroundColor Green
+        & qwen auth status
+        Write-Host ""
+        Write-Host "Нажмите любую клавишу для возврата в меню…" -ForegroundColor Green
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
       }
     }

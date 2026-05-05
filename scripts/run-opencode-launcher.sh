@@ -492,14 +492,19 @@ while true; do
     
     case "$profile_id" in
         "native-login")
-            echo -e "${CYAN}Запуск OpenCode providers login (интерактивный выбор)…${RESET}"
-            echo -e "${DARK_GRAY}Выберите провайдер и метод входа в интерактивном меню OpenCode.${RESET}"
-            if command -v opencode &>/dev/null; then
-                opencode providers login
-            else
-                echo -e "${RED}OpenCode CLI не найден. Установите: npm install -g opencode-ai@latest${RESET}"
-            fi
-            echo -e "${GREEN}Готово. Нажмите Enter…${RESET}"
+            echo ""
+            echo -e "${CYAN}OpenCode: авторизация через провайдеров${RESET}"
+            echo ""
+            echo -e "${YELLOW}Для нативного логина выполните в отдельном терминале:${RESET}"
+            echo -e "  ${WHITE}opencode providers login${RESET}"
+            echo ""
+            echo -e "${YELLOW}Либо задайте API-ключи через переменные окружения:${RESET}"
+            echo -e "  ${WHITE}OPENROUTER_API_KEY, GROQ_API_KEY, ZAI_API_KEY${RESET}"
+            echo ""
+            echo -e "${YELLOW}Для просмотра текущих подключений:${RESET}"
+            echo -e "  ${WHITE}opencode providers list${RESET}"
+            echo ""
+            echo -e "${GREEN}Нажмите Enter для возврата в меню…${RESET}"
             read
             continue
             ;;

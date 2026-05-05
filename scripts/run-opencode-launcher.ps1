@@ -429,17 +429,19 @@ while ($true) {
   }
 
   if ($profileId -eq "native-login") {
-    Write-Host "Запуск OpenCode providers login (интерактивный выбор)…" -ForegroundColor Cyan
-    Write-Host "Выберите провайдер и метод входа в интерактивном меню OpenCode." -ForegroundColor DarkGray
-    $opencodeExe = Resolve-OpenCodeExe
-    if (-not $opencodeExe) {
-      Write-Host "OpenCode CLI не найден. Установите: npm install -g opencode-ai@latest" -ForegroundColor Red
-      Write-Host "Нажмите любую клавишу…"
-      $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-      continue
-    }
-    & $opencodeExe providers login
-    Write-Host "Готово. Нажмите любую клавишу…" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "OpenCode: авторизация через провайдеров" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Для нативного логина выполните в отдельном терминале:" -ForegroundColor Yellow
+    Write-Host "  opencode providers login" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Либо задайте API-ключи через переменные окружения:" -ForegroundColor Yellow
+    Write-Host "  OPENROUTER_API_KEY, GROQ_API_KEY, ZAI_API_KEY" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Для просмотра текущих подключений:" -ForegroundColor Yellow
+    Write-Host "  opencode providers list" -ForegroundColor White
+    Write-Host ""
+    Write-Host "Нажмите любую клавишу для возврата в меню…" -ForegroundColor Green
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     continue
   }

@@ -248,15 +248,37 @@ while ($true) {
     if (-not $loginChoice) { continue }
     switch ([string]$loginChoice.Id) {
       "claude-sub" {
-        Write-Host "Запуск Claude OAuth (откроется браузер)…" -ForegroundColor Cyan
+        Clear-Host
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "  Claude OAuth — авторизация через браузер" -ForegroundColor Cyan
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Откроется браузер. Завершите авторизацию в нём." -ForegroundColor Yellow
+        Write-Host "  Нужна подписка Claude Pro / Max (claude.ai)." -ForegroundColor Yellow
+        Write-Host ""
         & claude auth login --claudeai
-        Write-Host "Готово. Нажмите любую клавишу…" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  Текущий статус:" -ForegroundColor Green
+        & claude auth status
+        Write-Host ""
+        Write-Host "Нажмите любую клавишу для возврата в меню…" -ForegroundColor Green
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
       }
       "anthropic-console" {
-        Write-Host "Запуск Anthropic Console авторизации (откроется браузер)…" -ForegroundColor Cyan
+        Clear-Host
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host "  Anthropic Console — авторизация через браузер" -ForegroundColor Cyan
+        Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "  Откроется браузер. Завершите авторизацию." -ForegroundColor Yellow
+        Write-Host "  Нужен аккаунт на console.anthropic.com." -ForegroundColor Yellow
+        Write-Host ""
         & claude auth login --console
-        Write-Host "Готово. Нажмите любую клавишу…" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "  Текущий статус:" -ForegroundColor Green
+        & claude auth status
+        Write-Host ""
+        Write-Host "Нажмите любую клавишу для возврата в меню…" -ForegroundColor Green
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
       }
     }

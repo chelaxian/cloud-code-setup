@@ -355,15 +355,37 @@ while true; do
 
             case "$login_id" in
                 "claude-sub")
-                    echo -e "${CYAN}Запуск Claude OAuth (откроется браузер)…${RESET}"
+                    clear
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo -e "${CYAN}  Claude OAuth — авторизация через браузер${RESET}"
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo ""
+                    echo -e "${YELLOW}  Откроется браузер. Завершите авторизацию в нём.${RESET}"
+                    echo -e "${YELLOW}  Нужна подписка Claude Pro / Max (claude.ai).${RESET}"
+                    echo ""
                     claude auth login --claudeai
-                    echo -e "${GREEN}Готово. Нажмите Enter…${RESET}"
+                    echo ""
+                    echo -e "${GREEN}  Текущий статус:${RESET}"
+                    claude auth status
+                    echo ""
+                    echo -e "${GREEN}Нажмите Enter для возврата в меню…${RESET}"
                     read
                     ;;
                 "anthropic-console")
-                    echo -e "${CYAN}Запуск Anthropic Console авторизации (откроется браузер)…${RESET}"
+                    clear
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo -e "${CYAN}  Anthropic Console — авторизация через браузер${RESET}"
+                    echo -e "${CYAN}═══════════════════════════════════════════════════${RESET}"
+                    echo ""
+                    echo -e "${YELLOW}  Откроется браузер. Завершите авторизацию.${RESET}"
+                    echo -e "${YELLOW}  Нужен аккаунт на console.anthropic.com.${RESET}"
+                    echo ""
                     claude auth login --console
-                    echo -e "${GREEN}Готово. Нажмите Enter…${RESET}"
+                    echo ""
+                    echo -e "${GREEN}  Текущий статус:${RESET}"
+                    claude auth status
+                    echo ""
+                    echo -e "${GREEN}Нажмите Enter для возврата в меню…${RESET}"
                     read
                     ;;
             esac
