@@ -199,6 +199,40 @@ else
     skip "ZAI_API_KEY пропущен"
 fi
 
+echo ""
+
+read -s -p "Groq API ключ (Enter = пропуск): " groq_key
+echo ""
+if [ -n "$groq_key" ]; then
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+        if [ -f "$rc" ]; then
+            sed -i '/^export GROQ_API_KEY=/d' "$rc"
+            echo "export GROQ_API_KEY=\"$groq_key\"" >> "$rc"
+        fi
+    done
+    export GROQ_API_KEY="$groq_key"
+    ok "GROQ_API_KEY сохранён"
+else
+    skip "GROQ_API_KEY пропущен"
+fi
+
+echo ""
+
+read -s -p "OpenRouter API ключ (Enter = пропуск): " or_key
+echo ""
+if [ -n "$or_key" ]; then
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+        if [ -f "$rc" ]; then
+            sed -i '/^export OPENROUTER_API_KEY=/d' "$rc"
+            echo "export OPENROUTER_API_KEY=\"$or_key\"" >> "$rc"
+        fi
+    done
+    export OPENROUTER_API_KEY="$or_key"
+    ok "OPENROUTER_API_KEY сохранён"
+else
+    skip "OPENROUTER_API_KEY пропущен"
+fi
+
 # ─── Настройка сессий Qwen ──────────────────────────────────────────────────
 
 if $INSTALL_QWEN; then

@@ -121,7 +121,9 @@ function Write-OpenCodeConfig {
     [Parameter(Mandatory = $true)][string]$Provider,
     [Parameter(Mandatory = $true)][string]$Model,
     [Parameter(Mandatory = $true)][string]$BaseURL,
-    [string]$ApiKey = ""
+    [string]$ApiKey = "",
+    [int]$MaxTokens = 8192,
+    [int]$ContextLength = 131072
   )
 
   $configDir = Join-Path $PSScriptRoot "opencode-sessions"
@@ -153,7 +155,9 @@ function Write-OpenCodeConfig {
   }
 
   $providerConf.models[$Model] = [ordered]@{
-    name = $Model
+    name          = $Model
+    maxTokens     = $MaxTokens
+    contextLength = $ContextLength
   }
 
   $config.provider[$Provider] = $providerConf
@@ -192,7 +196,7 @@ function Invoke-OpenCodeProfile {
         throw "Z.AI API ключ не задан. Задайте ZAI_API_KEY или выберите «Сменить ключ API провайдера»."
       }
 
-      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-4.7" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-4.7" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
 
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Z.AI GLM-4.7)…" -ForegroundColor Cyan
@@ -214,7 +218,7 @@ function Invoke-OpenCodeProfile {
         throw "Z.AI API ключ не задан. Задайте ZAI_API_KEY или выберите «Сменить ключ API провайдера»."
       }
 
-      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-5.1" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-5.1" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
 
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Z.AI GLM-5.1)…" -ForegroundColor Cyan
@@ -230,7 +234,7 @@ function Invoke-OpenCodeProfile {
         throw "NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY или выберите «Сменить ключ API провайдера»."
       }
 
-      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "z-ai/glm4.7" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "z-ai/glm4.7" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
 
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (NVIDIA NIM GLM-4.7)…" -ForegroundColor Cyan
@@ -246,7 +250,7 @@ function Invoke-OpenCodeProfile {
         throw "NVIDIA NIM API ключ не задан. Задайте NVIDIA_NIM_API_KEY или выберите «Сменить ключ API провайдера»."
       }
 
-      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "qwen/qwen3.5-122b-a10b" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "nvidia-nim" -Model "qwen/qwen3.5-122b-a10b" -BaseURL "https://integrate.api.nvidia.com/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
 
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (NVIDIA NIM Qwen3.5-122B-A10B)…" -ForegroundColor Cyan
@@ -300,7 +304,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model $mid.Trim() -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model $mid.Trim() -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq custom: $($mid.Trim()))…" -ForegroundColor Cyan
       & $opencodeExe
@@ -317,7 +321,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model $mid.Trim() -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model $mid.Trim() -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (OpenRouter custom: $($mid.Trim()))…" -ForegroundColor Cyan
       & $opencodeExe
@@ -329,7 +333,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "llama-3.3-70b-versatile" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "llama-3.3-70b-versatile" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq Llama 3.3 70B)…" -ForegroundColor Cyan
       & $opencodeExe
@@ -341,7 +345,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "Groq API ключ не задан. Задайте GROQ_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "qwen/qwen3-32b" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "groq" -Model "qwen/qwen3-32b" -BaseURL "https://api.groq.com/openai/v1" -ApiKey $apiKey -MaxTokens 40960 -ContextLength 131072
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (Groq Qwen3 32B)…" -ForegroundColor Cyan
       & $opencodeExe
@@ -353,7 +357,7 @@ function Invoke-OpenCodeProfile {
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
         throw "OpenRouter API ключ не задан. Задайте OPENROUTER_API_KEY или выберите «Сменить ключ API провайдера»."
       }
-      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 32768 -ContextLength 131072
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (OpenRouter Qwen3 Coder)…" -ForegroundColor Cyan
       & $opencodeExe

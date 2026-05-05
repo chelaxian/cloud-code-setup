@@ -217,6 +217,28 @@ if (-not [string]::IsNullOrWhiteSpace($zaiKey)) {
 
 Write-Host ""
 
+# Groq
+$groqKey = Read-Secret "Groq API ключ (Enter = пропуск): "
+if (-not [string]::IsNullOrWhiteSpace($groqKey)) {
+    [Environment]::SetEnvironmentVariable("GROQ_API_KEY", $groqKey.Trim(), "User")
+    Write-Status "  [OK] GROQ_API_KEY сохранён" "Green"
+} else {
+    Write-Status "  [SKIP] GROQ_API_KEY пропущен" "Yellow"
+}
+
+Write-Host ""
+
+# OpenRouter
+$orKey = Read-Secret "OpenRouter API ключ (Enter = пропуск): "
+if (-not [string]::IsNullOrWhiteSpace($orKey)) {
+    [Environment]::SetEnvironmentVariable("OPENROUTER_API_KEY", $orKey.Trim(), "User")
+    Write-Status "  [OK] OPENROUTER_API_KEY сохранён" "Green"
+} else {
+    Write-Status "  [SKIP] OPENROUTER_API_KEY пропущен" "Yellow"
+}
+
+Write-Host ""
+
 # ─── Настройка сессий Qwen ───────────────────────────────────────────────────
 
 if ($installQwen) {

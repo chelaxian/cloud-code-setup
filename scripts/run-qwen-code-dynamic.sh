@@ -109,6 +109,11 @@ if [ "$PROVIDER" = "zai" ]; then
               "enable_thinking": true,
               "clear_thinking": false
             }
+          },
+          "samplingParams": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "max_tokens": 81920
           }
         }
       }
@@ -120,6 +125,25 @@ if [ "$PROVIDER" = "zai" ]; then
 SETTINGS_EOF
 else
   CONTEXT_SIZE=131072
+  MAX_TOKENS=81920
+  # Ограничения для Groq/OpenRouter
+  if [ "$PROVIDER" = "groq" ]; then
+    MAX_TOKENS=32768
+    MID_LOWER=$(echo "$MODEL_ID" | tr '[:upper:]' '[:lower:]')
+    if echo "$MID_LOWER" | grep -q "qwen3-32b"; then
+      MAX_TOKENS=40960
+    elif echo "$MID_LOWER" | grep -q "llama-4-scout"; then
+      MAX_TOKENS=8192
+    elif echo "$MID_LOWER" | grep -q "gpt-oss-120b"; then
+      MAX_TOKENS=65536
+    elif echo "$MID_LOWER" | grep -q "gpt-oss-20b"; then
+      MAX_TOKENS=65536
+    elif echo "$MID_LOWER" | grep -q "llama-3\.1-8b"; then
+      MAX_TOKENS=131072
+    fi
+  elif [ "$PROVIDER" = "openrouter" ]; then
+    MAX_TOKENS=32768
+  fi
   cat > "$QWEN_DIR/settings.json" <<SETTINGS_EOF
 {
   "modelProviders": {
@@ -132,7 +156,12 @@ else
         "generationConfig": {
           "timeout": 600000,
           "maxRetries": 4,
-          "contextWindowSize": $CONTEXT_SIZE
+          "contextWindowSize": $CONTEXT_SIZE,
+          "samplingParams": {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "max_tokens": $MAX_TOKENS
+          }
         }
       }
     ]
@@ -143,8 +172,17 @@ else
 SETTINGS_EOF
 fi
 
-# ── Экспортируем ключ ──
+# ── Экспортируем ключ и лимиты ──
 export OPENAI_API_KEY="$API_KEY"
+export API_TIMEOUT_MS="600000"
+if [ "$PROVIDER" = "groq" ]; then
+  export QWEN_CODE_MAX_OUTPUT_TOKENS="$MAX_TOKENS"
+elif [ "$PROVIDER" = "openrouter" ]; then
+  export QWEN_CODE_MAX_OUTPUT_TOKENS="$MAX_TOKENS"
+else
+  export QWEN_CODE_MAX_OUTPUT_TOKENS="81920"
+fi
+export QWEN_CODE_EMIT_TOOL_USE_SUMMARIES="1"
 
 # ── Находим qwen-code ──
 QWEN_EXE=""

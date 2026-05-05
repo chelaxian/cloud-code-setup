@@ -85,7 +85,9 @@ function Build-QwenSettingsZai([string]$Mid) {
 function Build-QwenSettingsOpenAI {
   param(
     [Parameter(Mandatory = $true)][string]$Mid,
-    [Parameter(Mandatory = $true)][string]$BaseUrl
+    [Parameter(Mandatory = $true)][string]$BaseUrl,
+    [int]$ContextWindowSize = 131072,
+    [int]$MaxTokens = 81920
   )
   return @{
     modelProviders = @{
@@ -98,7 +100,12 @@ function Build-QwenSettingsOpenAI {
           generationConfig = @{
             timeout            = 600000
             maxRetries         = 4
-            contextWindowSize  = 131072
+            contextWindowSize  = $ContextWindowSize
+            samplingParams     = @{
+              temperature = 0.6
+              top_p         = 0.95
+              max_tokens    = $MaxTokens
+            }
           }
         }
       )
@@ -304,13 +311,45 @@ if ($Provider -eq "zai") {
   if ([string]::IsNullOrWhiteSpace($key)) { $key = $env:GROQ_API_KEY }
   if ([string]::IsNullOrWhiteSpace($key)) { $key = Read-SecretText "Groq API key" }
   $env:OPENAI_API_KEY = $key.Trim()
-  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://api.groq.com/openai/v1"
+  $groqCtx = 131072
+  $groqMaxTok = 32768
+  $groqMaxOut = 32768
+  $groqMid = $ModelId.Trim().ToLowerInvariant()
+  if ($groqMid -match "qwen3-32b") {
+    $groqMaxTok = 40960
+    $groqMaxOut = 40960
+  } elseif ($groqMid -match "llama-3\.1-8b") {
+    $groqMaxTok = 131072
+    $groqMaxOut = 32768
+  } elseif ($groqMid -match "llama-4-scout") {
+    $groqCtx = 131072
+    $groqMaxTok = 8192
+    $groqMaxOut = 8192
+  } elseif ($groqMid -match "gpt-oss-120b") {
+    $groqMaxTok = 65536
+    $groqMaxOut = 32768
+  } elseif ($groqMid -match "gpt-oss-20b") {
+    $groqMaxTok = 65536
+    $groqMaxOut = 32768
+  }
+  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://api.groq.com/openai/v1" -ContextWindowSize $groqCtx -MaxTokens $groqMaxTok
+  $script:GroqMaxOutput = $groqMaxOut
 } elseif ($Provider -eq "openrouter") {
   $key = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
   if ([string]::IsNullOrWhiteSpace($key)) { $key = $env:OPENROUTER_API_KEY }
   if ([string]::IsNullOrWhiteSpace($key)) { $key = Read-SecretText "OpenRouter API key" }
   $env:OPENAI_API_KEY = $key.Trim()
-  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://openrouter.ai/api/v1"
+  $orCtx = 131072
+  $orMaxTok = 32768
+  $orMaxOut = 32768
+  $orMid = $ModelId.Trim().ToLowerInvariant()
+  if ($orMid -match ":free") {
+    $orCtx = 131072
+    $orMaxTok = 32768
+    $orMaxOut = 32768
+  }
+  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://openrouter.ai/api/v1" -ContextWindowSize $orCtx -MaxTokens $orMaxTok
+  $script:OpenRouterMaxOutput = $orMaxOut
 } else {
   $key = [Environment]::GetEnvironmentVariable("NVIDIA_NIM_API_KEY", "User")
   if ([string]::IsNullOrWhiteSpace($key)) { $key = $env:NVIDIA_NIM_API_KEY }
@@ -339,6 +378,12 @@ $env:API_TIMEOUT_MS = "600000"
 if ($Provider -eq "nim" -and $script:NimDynamicCompat -and $script:NimCompatLimits) {
   $env:QWEN_CODE_MAX_OUTPUT_TOKENS = [string]$script:NimCompatLimits.EnvMaxOutput
   $env:QWEN_CODE_EMIT_TOOL_USE_SUMMARIES = "0"
+} elseif ($Provider -eq "groq" -and $script:GroqMaxOutput) {
+  $env:QWEN_CODE_MAX_OUTPUT_TOKENS = [string]$script:GroqMaxOutput
+  $env:QWEN_CODE_EMIT_TOOL_USE_SUMMARIES = "1"
+} elseif ($Provider -eq "openrouter" -and $script:OpenRouterMaxOutput) {
+  $env:QWEN_CODE_MAX_OUTPUT_TOKENS = [string]$script:OpenRouterMaxOutput
+  $env:QWEN_CODE_EMIT_TOOL_USE_SUMMARIES = "1"
 } else {
   $env:QWEN_CODE_MAX_OUTPUT_TOKENS = "81920"
   $env:QWEN_CODE_EMIT_TOOL_USE_SUMMARIES = "1"

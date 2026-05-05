@@ -65,6 +65,11 @@ function Invoke-LauncherCustomModelWizard {
     [pscustomobject]@{ Id = "openrouter-free"; Label = "OpenRouter — только бесплатные модели (статический список)" }
   )
 
+  # Groq не поддерживается для Claude Code (ограничение free-claude-code: nvidia_nim transport)
+  if ($App -eq "Claude") {
+    $provItems = @($provItems | Where-Object { $_.Id -notlike "groq*" })
+  }
+
   while ($true) {
     $p1 = Show-TuiFramedMenu -AppBrand $brand -Title "Другая модель" -Subtitle "Шаг 1 из 2 — выберите провайдера" -Items $provItems -InitialIndex 0 -EscapeAction Back
     if ($null -eq $p1) { return $null }
