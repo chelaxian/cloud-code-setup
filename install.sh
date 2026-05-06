@@ -254,7 +254,7 @@ chmod +x "$SCRIPTS_DIR"/*.sh 2>/dev/null || true
 
 # Определяем каталог рабочего стола
 DESKTOP=""
-for d in "$HOME/Desktop" "$HOME/Рабочий стол" "$HOME"; do
+for d in "$HOME/Desktop" "$HOME/Рабочий стол"; do
     if [ -d "$d" ]; then
         DESKTOP="$d"
         break
@@ -281,24 +281,49 @@ EOF
     ok "${name}.desktop → $entry_path"
 }
 
+# Создаём .sh скрипты-лаунчеры в ~/ (для серверов без GUI)
+make_sh_launcher() {
+    local name="$1"
+    local exec_path="$2"
+    local safe_name=$(echo "$name" | tr ' ' '-' | tr '[:upper:]' '[:lower:]')
+    local sh_path="$HOME/${safe_name}.sh"
+
+    cat > "$sh_path" << EOF
+#!/bin/bash
+# Запуск лаунчера $name
+exec bash "$exec_path" "\$@"
+EOF
+    chmod +x "$sh_path"
+    ok "${safe_name}.sh → $sh_path"
+}
+
 if $INSTALL_QWEN; then
     LAUNCHER="$SCRIPTS_DIR/run-qwen-code-launcher.sh"
     if [ -f "$LAUNCHER" ]; then
-        make_desktop_entry "Qwen Code (cloud)" "$LAUNCHER"
+        if [ -n "$DESKTOP" ]; then
+            make_desktop_entry "Qwen Code (cloud)" "$LAUNCHER"
+        fi
+        make_sh_launcher "qwen-code-cloud" "$LAUNCHER"
     fi
 fi
 
 if $INSTALL_CLAUDE; then
     LAUNCHER="$SCRIPTS_DIR/run-claude-cloud-launcher.sh"
     if [ -f "$LAUNCHER" ]; then
-        make_desktop_entry "Claude Code (cloud)" "$LAUNCHER"
+        if [ -n "$DESKTOP" ]; then
+            make_desktop_entry "Claude Code (cloud)" "$LAUNCHER"
+        fi
+        make_sh_launcher "claude-code-cloud" "$LAUNCHER"
     fi
 fi
 
 if $INSTALL_OPENCODE; then
     LAUNCHER="$SCRIPTS_DIR/run-opencode-launcher.sh"
     if [ -f "$LAUNCHER" ]; then
-        make_desktop_entry "OpenCode (cloud)" "$LAUNCHER"
+        if [ -n "$DESKTOP" ]; then
+            make_desktop_entry "OpenCode (cloud)" "$LAUNCHER"
+        fi
+        make_sh_launcher "opencode-cloud" "$LAUNCHER"
     fi
 fi
 
@@ -311,10 +336,10 @@ echo -e "${CYAN}═════════════════════�
 echo ""
 echo -e "${GRAY}Репозиторий: $INSTALL_DIR${RESET}"
 echo ""
-echo -e "${CYAN}Ярлыки на рабочем столе:${RESET}"
-if $INSTALL_QWEN;     then echo -e "${GREEN}  * Qwen Code (cloud)${RESET}"; fi
-if $INSTALL_CLAUDE;   then echo -e "${GREEN}  * Claude Code (cloud)${RESET}"; fi
-if $INSTALL_OPENCODE; then echo -e "${GREEN}  * OpenCode (cloud)${RESET}"; fi
+echo -e "${CYAN}Команды для запуска:${RESET}"
+if $INSTALL_QWEN;     then echo -e "${GREEN}  ~/qwen-code-cloud.sh${RESET}"; fi
+if $INSTALL_CLAUDE;   then echo -e "${GREEN}  ~/claude-code-cloud.sh${RESET}"; fi
+if $INSTALL_OPENCODE; then echo -e "${GREEN}  ~/opencode-cloud.sh${RESET}"; fi
 echo ""
 echo -e "${YELLOW}ПРИМЕЧАНИЯ:${RESET}"
 echo -e "${GRAY}  - Выполните: source ~/.bashrc  (или перезапустите терминал)${RESET}"

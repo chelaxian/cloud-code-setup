@@ -77,10 +77,12 @@ if (Test-Path -LiteralPath (Join-Path $InstallDir ".git")) {
     Write-Status "Обновление (git pull)…" "Cyan"
     Push-Location $InstallDir
     try {
+        $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
         git pull origin main 2>$null
+        $ErrorActionPreference = $prevEAP
         Write-Status "  [OK] Репозиторий обновлён" "Green"
     } catch {
-        Write-Status "  [WARN] Не удалось обновить: $_" "Yellow"
+        Write-Status "  [WARN] Не удалось обновить" "Yellow"
     } finally {
         Pop-Location
     }
@@ -142,9 +144,9 @@ if ($installQwen) {
     $qwenCmd = Get-Command qwen -ErrorAction SilentlyContinue
     if (-not $qwenCmd) {
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        npm install -g @anthropic-ai/qwen-code@latest 2>$null
+        & npm.cmd install -g @qwen-code/qwen-code@latest 2>$null
         if ($LASTEXITCODE -ne 0) {
-            npm install -g @qwen-code/qwen-code@latest 2>$null
+            & npm.cmd install -g @anthropic-ai/qwen-code@latest 2>$null
         }
         $ErrorActionPreference = $prevEAP
         $qwenCmd = Get-Command qwen -ErrorAction SilentlyContinue
@@ -152,7 +154,8 @@ if ($installQwen) {
     if ($qwenCmd) {
         Write-Status "  [OK] Qwen Code CLI: $($qwenCmd.Source)" "Green"
     } else {
-        Write-Status "  [WARN] Qwen Code CLI не установлен. Установите вручную: npm i -g @qwen-code/qwen-code" "Yellow"
+        Write-Status "  [WARN] Qwen Code CLI не установлен. Установите вручную:" "Yellow"
+        Write-Status "         npm i -g @qwen-code/qwen-code" "Yellow"
     }
 }
 
@@ -161,14 +164,15 @@ if ($installClaude) {
     $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
     if (-not $claudeCmd) {
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        npm install -g @anthropic-ai/claude-code@latest 2>$null
+        & npm.cmd install -g @anthropic-ai/claude-code@latest 2>$null
         $ErrorActionPreference = $prevEAP
         $claudeCmd = Get-Command claude -ErrorAction SilentlyContinue
     }
     if ($claudeCmd) {
         Write-Status "  [OK] Claude Code CLI: $($claudeCmd.Source)" "Green"
     } else {
-        Write-Status "  [WARN] Claude Code CLI не установлен. Установите вручную: npm i -g @anthropic-ai/claude-code" "Yellow"
+        Write-Status "  [WARN] Claude Code CLI не установлен. Установите вручную:" "Yellow"
+        Write-Status "         npm i -g @anthropic-ai/claude-code" "Yellow"
     }
 }
 
@@ -177,14 +181,15 @@ if ($installOpenCode) {
     $ocCmd = Get-Command opencode -ErrorAction SilentlyContinue
     if (-not $ocCmd) {
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        npm install -g opencode-ai@latest 2>$null
+        & npm.cmd install -g opencode-ai@latest 2>$null
         $ErrorActionPreference = $prevEAP
         $ocCmd = Get-Command opencode -ErrorAction SilentlyContinue
     }
     if ($ocCmd) {
         Write-Status "  [OK] OpenCode CLI: $($ocCmd.Source)" "Green"
     } else {
-        Write-Status "  [WARN] OpenCode CLI не установлен. Установите вручную: npm i -g opencode-ai@latest" "Yellow"
+        Write-Status "  [WARN] OpenCode CLI не установлен. Установите вручную:" "Yellow"
+        Write-Status "         npm i -g opencode-ai@latest" "Yellow"
     }
 }
 
@@ -275,46 +280,43 @@ Write-Status "══════════════════════
 Write-Host ""
 
 $desktop = [Environment]::GetFolderPath("Desktop")
+if (-not $desktop -or -not (Test-Path -LiteralPath $desktop)) {
+    $desktop = Join-Path $env:USERPROFILE "Desktop"
+    if (-not (Test-Path -LiteralPath $desktop)) {
+        $desktop = $env:USERPROFILE
+    }
+}
+
 $psExe = (Get-Command powershell.exe -ErrorAction SilentlyContinue).Source
 if (-not $psExe) { $psExe = "powershell.exe" }
-$shell = New-Object -ComObject WScript.Shell
 $scriptsDir = Join-Path $InstallDir "scripts"
 
-if ($installQwen) {
-    $launcher = Join-Path $scriptsDir "run-qwen-code-launcher.ps1"
-    if (Test-Path -LiteralPath $launcher) {
-        $lnk = $shell.CreateShortcut((Join-Path $desktop "Qwen Code (cloud).lnk"))
+function New-LauncherShortcut {
+    param([string]$Name, [string]$ScriptFile)
+    $launcher = Join-Path $scriptsDir $ScriptFile
+    if (-not (Test-Path -LiteralPath $launcher)) { return }
+    $lnkPath = Join-Path $desktop "$Name.lnk"
+    try {
+        $shell = New-Object -ComObject WScript.Shell -ErrorAction Stop
+        $lnk = $shell.CreateShortcut($lnkPath)
         $lnk.TargetPath = $psExe
-        $lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
+        $lnk.Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
         $lnk.WorkingDirectory = $InstallDir
+        $lnk.WindowStyle = 1
         $lnk.Save()
-        Write-Status "  [OK] Qwen Code (cloud).lnk" "Green"
+        Write-Status "  [OK] $Name.lnk → $lnkPath" "Green"
+    } catch {
+        # Fallback: создаём .cmd файл вместо ярлыка
+        $cmdPath = Join-Path $desktop "$Name.cmd"
+        $cmdContent = "@echo off`r`nchcp 65001 >nul 2>`&1`r`npowershell -NoProfile -ExecutionPolicy Bypass -File `"$launcher`"`r`npause"
+        [System.IO.File]::WriteAllText($cmdPath, $cmdContent, (New-Object System.Text.UTF8Encoding($false)))
+        Write-Status "  [OK] $Name.cmd → $cmdPath" "Green"
     }
 }
 
-if ($installClaude) {
-    $launcher = Join-Path $scriptsDir "run-claude-cloud-launcher.ps1"
-    if (Test-Path -LiteralPath $launcher) {
-        $lnk = $shell.CreateShortcut((Join-Path $desktop "Claude Code (cloud).lnk"))
-        $lnk.TargetPath = $psExe
-        $lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
-        $lnk.WorkingDirectory = $InstallDir
-        $lnk.Save()
-        Write-Status "  [OK] Claude Code (cloud).lnk" "Green"
-    }
-}
-
-if ($installOpenCode) {
-    $launcher = Join-Path $scriptsDir "run-opencode-launcher.ps1"
-    if (Test-Path -LiteralPath $launcher) {
-        $lnk = $shell.CreateShortcut((Join-Path $desktop "OpenCode (cloud).lnk"))
-        $lnk.TargetPath = $psExe
-        $lnk.Arguments = "/k chcp 65001 >nul & powershell -NoProfile -ExecutionPolicy Bypass -File `"$launcher`""
-        $lnk.WorkingDirectory = $InstallDir
-        $lnk.Save()
-        Write-Status "  [OK] OpenCode (cloud).lnk" "Green"
-    }
-}
+if ($installQwen)     { New-LauncherShortcut -Name "Qwen Code (cloud)"     -ScriptFile "run-qwen-code-launcher.ps1" }
+if ($installClaude)   { New-LauncherShortcut -Name "Claude Code (cloud)"   -ScriptFile "run-claude-cloud-launcher.ps1" }
+if ($installOpenCode) { New-LauncherShortcut -Name "OpenCode (cloud)"      -ScriptFile "run-opencode-launcher.ps1" }
 
 Write-Host ""
 
