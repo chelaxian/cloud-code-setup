@@ -444,12 +444,12 @@ try {
   if ($Provider -eq "groq") {
     Write-Host ""
     Write-Host "╔══════════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
-    Write-Host "║  Groq free tier: TPM лимит 6K-12K слишком мал для agent mode.  ║" -ForegroundColor Yellow
-    Write-Host "║  Запуск в режиме чата (без инструментов/agent).                 ║" -ForegroundColor Yellow
+    Write-Host "║  Groq free tier: контекст уменьшен до 4K для стабильности.      ║" -ForegroundColor Yellow
+    Write-Host "║  Agent mode работает с ограничениями TPM.                       ║" -ForegroundColor Yellow
     Write-Host "║  Для полного agent mode используйте Z.AI / NIM / OpenRouter.    ║" -ForegroundColor Yellow
     Write-Host "╚══════════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
     Write-Host ""
-    & $qwenExe --bare -m $ModelId --openai-api-key $env:OPENAI_API_KEY --openai-base-url "https://api.groq.com/openai/v1" --system-prompt "You are a helpful coding assistant. Answer questions about code. No tools available - just chat." --auth-type openai
+    & $qwenExe
   } else {
     & $qwenExe
   }

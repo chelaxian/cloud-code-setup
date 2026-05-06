@@ -211,12 +211,12 @@ cd "$SESSION_ROOT"
 if [ "$PROVIDER" = "groq" ]; then
   echo ""
   echo -e "\033[33m╔══════════════════════════════════════════════════════════════════╗\033[0m"
-  echo -e "\033[33m║  Groq free tier: TPM лимит 6K-12K слишком мал для agent mode.  ║\033[0m"
-  echo -e "\033[33m║  Запуск в режиме чата (без инструментов/agent).                 ║\033[0m"
+  echo -e "\033[33m║  Groq free tier: контекст уменьшен до 4K для стабильности.      ║\033[0m"
+  echo -e "\033[33m║  Agent mode работает с ограничениями TPM.                       ║\033[0m"
   echo -e "\033[33m║  Для полного agent mode используйте Z.AI / NIM / OpenRouter.    ║\033[0m"
   echo -e "\033[33m╚══════════════════════════════════════════════════════════════════╝\033[0m"
   echo ""
-  exec "$QWEN_EXE" --bare -m "$MODEL_ID" --openai-api-key "$OPENAI_API_KEY" --openai-base-url "https://api.groq.com/openai/v1" --system-prompt "You are a helpful coding assistant. Answer questions about code. No tools available - just chat." --auth-type openai
+  exec "$QWEN_EXE"
 else
   exec "$QWEN_EXE"
 fi
