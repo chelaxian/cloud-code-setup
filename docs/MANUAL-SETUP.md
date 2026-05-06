@@ -675,13 +675,15 @@ chmod +x ~/cloud-code-setup/scripts/*.sh
 - **`tool_choice=auto`** на бэкенде без поддержки → автоматически `none`
 - **Длинная история** при маленьком контексте → автоматическая обрезка
 
-### Groq: «max_tokens must be less than or equal to 32768» / «Request too large»
+### Groq: «Request too large» / TPM limit exceeded
 
-Groq бесплатный тариф имеет жёсткие лимиты TPM (tokens per minute). Лаунчеры автоматически урезают контекст:
-- **Qwen Code**: `contextWindowSize=8192`, `max_tokens=4096`, `skipStartupContext=true`
-- **OpenCode**: `maxTokens=4096`, `contextLength=8192`
+Groq бесплатный тариф имеет жёсткие лимиты TPM (6000-12000 токенов в минуту). Системный промпт агента (tool definitions + инструкции) занимает ~20-30K токенов, что **превышает лимит**. 
 
-Если ошибка повторяется — подождите 1-2 минуты (сброс rate limit) или используйте другую модель.
+Решение в лаунчерах:
+- **Qwen Code**: запуск в режиме чата (`--bare`, без инструментов) — только текстовый диалог, без агента
+- **OpenCode**: урезанный контекст `maxTokens=2048`, `contextLength=4096`
+
+Для полноценной работы агента используйте **Z.AI**, **NVIDIA NIM** или **OpenRouter**.
 
 ### OpenRouter: «403 Provider returned error» / «429 Too Many Requests»
 

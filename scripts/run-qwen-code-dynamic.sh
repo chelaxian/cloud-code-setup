@@ -129,8 +129,8 @@ else
   SKIP_STARTUP=""
   # Groq free tier: очень низкий TPM (6-12K). Урезаем контекст.
   if [ "$PROVIDER" = "groq" ]; then
-    CONTEXT_SIZE=8192
-    MAX_TOKENS=4096
+    CONTEXT_SIZE=4096
+    MAX_TOKENS=2048
     SKIP_STARTUP=',"skipStartupContext":true'
   elif [ "$PROVIDER" = "openrouter" ]; then
     CONTEXT_SIZE=16384
@@ -169,7 +169,7 @@ fi
 export OPENAI_API_KEY="$API_KEY"
 export API_TIMEOUT_MS="600000"
 if [ "$PROVIDER" = "groq" ]; then
-  export QWEN_CODE_MAX_OUTPUT_TOKENS="4096"
+  export QWEN_CODE_MAX_OUTPUT_TOKENS="2048"
   export QWEN_CODE_EMIT_TOOL_USE_SUMMARIES="0"
 elif [ "$PROVIDER" = "openrouter" ]; then
   export QWEN_CODE_MAX_OUTPUT_TOKENS="8192"
@@ -198,4 +198,15 @@ fi
 
 echo -e "\033[36mQwen Code: $PROVIDER / модель $MODEL_ID → $SESSION_ROOT\033[0m"
 cd "$SESSION_ROOT"
-exec "$QWEN_EXE"
+if [ "$PROVIDER" = "groq" ]; then
+  echo ""
+  echo -e "\033[33m╔══════════════════════════════════════════════════════════════════╗\033[0m"
+  echo -e "\033[33m║  Groq free tier: TPM лимит 6K-12K слишком мал для agent mode.  ║\033[0m"
+  echo -e "\033[33m║  Запуск в режиме чата (без инструментов/agent).                 ║\033[0m"
+  echo -e "\033[33m║  Для полного agent mode используйте Z.AI / NIM / OpenRouter.    ║\033[0m"
+  echo -e "\033[33m╚══════════════════════════════════════════════════════════════════╝\033[0m"
+  echo ""
+  exec "$QWEN_EXE" --bare -m "$MODEL_ID" --openai-api-key "$OPENAI_API_KEY" --openai-base-url "https://api.groq.com/openai/v1" --system-prompt "You are a helpful coding assistant. Answer questions about code. No tools available - just chat." --auth-type openai
+else
+  exec "$QWEN_EXE"
+fi

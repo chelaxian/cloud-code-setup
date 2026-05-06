@@ -39,11 +39,11 @@ $script:Profiles = @(
   }
   @{
     Id          = "groq-llama"
-    Label       = "Groq — Llama 3.3 70B (free, tool calling)"
+    Label       = "Groq — Llama 3.3 70B (free, chat only)"
   }
   @{
     Id          = "groq-qwen"
-    Label       = "Groq — Qwen3 32B (free, tool calling)"
+    Label       = "Groq — Qwen3 32B (free, chat only)"
   }
   @{
     Id          = "openrouter-qwen-coder"

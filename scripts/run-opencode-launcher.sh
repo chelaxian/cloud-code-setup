@@ -17,8 +17,8 @@ PROFILES=(
     "zai-glm51|Z.AI — GLM-5.1 (free, tool calling)"
     "nim-glm|NVIDIA NIM — GLM-4.7 (free, tool calling)"
     "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
-    "groq-llama|Groq — Llama 3.3 70B (free, tool calling)"
-    "groq-qwen|Groq — Qwen3 32B (free, tool calling)"
+    "groq-llama|Groq — Llama 3.3 70B (free, chat only)"
+    "groq-qwen|Groq — Qwen3 32B (free, chat only)"
     "openrouter-qwen-coder|OpenRouter — Qwen3 Coder (free, tool calling)"
     "custom-model|Другая модель… → выбор провайдера и модели"
     "native-login|Нативный логин (OpenCode Providers)"
@@ -220,7 +220,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "groq" "llama-3.3-70b-versatile" "https://api.groq.com/openai/v1" "$api_key" 4096 8192)
+            config_path=$(write_opencode_config "groq" "llama-3.3-70b-versatile" "https://api.groq.com/openai/v1" "$api_key" 2048 4096)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (Groq Llama 3.3 70B)…${RESET}"
             "$opencode_exe"
@@ -232,7 +232,7 @@ invoke_opencode_profile() {
                 return 1
             fi
             local config_path
-            config_path=$(write_opencode_config "groq" "qwen/qwen3-32b" "https://api.groq.com/openai/v1" "$api_key" 4096 8192)
+            config_path=$(write_opencode_config "groq" "qwen/qwen3-32b" "https://api.groq.com/openai/v1" "$api_key" 2048 4096)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (Groq Qwen3 32B)…${RESET}"
             "$opencode_exe"
