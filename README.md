@@ -56,21 +56,55 @@ cd cloud-code-setup
 
 ---
 
-## Провайдеры
+## Провайдеры и модели
 
-| Провайдер | Модели | Для кого |
-|-----------|--------|----------|
-| **NVIDIA NIM** | GLM-4.7, Qwen3.5-122B-A10B | Qwen Code, Claude Code, OpenCode |
-| **Z.AI** | GLM-4.7, GLM-5.1 | Qwen Code, Claude Code, OpenCode |
-| **Groq** | Llama 3.3 70B, Qwen3 32B | Qwen Code, OpenCode |
-| **OpenRouter** | Qwen3 Coder (free), Claude Sonnet 4 (paid) | Qwen Code, Claude Code, OpenCode |
+Все модели доступны из главного меню лаунчера (TUI):
+
+### NVIDIA NIM (free, tool calling)
+| Модель | Qwen Code | Claude Code | OpenCode |
+|--------|-----------|-------------|----------|
+| GLM-4.7 | + | + | + |
+| Qwen3.5-122B-A10B | + | + | + |
+
+### Z.AI (paid, tool calling)
+| Модель | Qwen Code | Claude Code | OpenCode |
+|--------|-----------|-------------|----------|
+| GLM-4.7 | + | + | + |
+| GLM-5.1 | + | + | + |
+
+### Z.AI Flash (free, tool calling)
+| Модель | Qwen Code | Claude Code | OpenCode |
+|--------|-----------|-------------|----------|
+| GLM-4.7-Flash | + | + | + |
+| GLM-4.5-Flash | + | + | + |
+
+### OpenRouter (free, tool calling)
+| Модель | Qwen Code | Claude Code | OpenCode |
+|--------|-----------|-------------|----------|
+| Qwen3 Coder | + | + | + |
+| Tencent Hy3 preview | + | + | + |
+| Nemotron 3 Super 120B | + | + | + |
+| Poolside Laguna M.1 (coding) | + | + | + |
+
+### OpenRouter (paid, tool calling)
+| Модель | Qwen Code | Claude Code | OpenCode |
+|--------|-----------|-------------|----------|
+| Claude Sonnet 4 | — | + | — |
+
+### Groq (free, chat only — через «Другая модель»)
+| Заметка | Qwen Code | Claude Code | OpenCode |
+|---------|-----------|-------------|----------|
+| Любая Groq модель, контекст 4K, chat only | + | — | + |
+
+> Пункты **«Другая модель…»** позволяют выбрать любую модель из каталога провайдера (API или статический список).
+> Пункт **«Нативный логин»** — OAuth-авторизация через браузер (Qwen, Claude, OpenCode).
 
 ### Где взять API ключи
 
-- **NVIDIA NIM**: [https://build.nvidia.com/](https://build.nvidia.com/) — бесплатный ключ после регистрации
-- **Z.AI**: [https://open.bigmodel.cn/](https://open.bigmodel.cn/) — GLM API
-- **Groq**: [https://console.groq.com/](https://console.groq.com/) — бесплатный ключ, ультрабыстрая инференс
-- **OpenRouter**: [https://openrouter.ai/](https://openrouter.ai/) — шлюз к множеству моделей, есть бесплатные
+- **NVIDIA NIM**: [build.nvidia.com](https://build.nvidia.com/) — бесплатный ключ после регистрации
+- **Z.AI**: [console.z.ai](https://console.z.ai/) — GLM API (paid); [open.bigmodel.cn](https://open.bigmodel.cn/) — альтернативный вход
+- **Groq**: [console.groq.com](https://console.groq.com/) — бесплатный ключ, ультрабыстрая инференс
+- **OpenRouter**: [openrouter.ai](https://openrouter.ai/) — шлюз к множеству моделей, есть бесплатные
 
 ---
 
