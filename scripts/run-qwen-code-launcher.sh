@@ -16,7 +16,12 @@ PROFILES=(
     "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
     "zai-glm|Z.AI — GLM-4.7 (free, tool calling)"
     "zai-glm51|Z.AI — GLM-5.1 (free, tool calling)"
+    "zai-flash47|Z.AI — GLM-4.7-Flash (free, tool calling)"
+    "zai-flash45|Z.AI — GLM-4.5-Flash (free, tool calling)"
     "openrouter-qwen-coder|OpenRouter — Qwen3 Coder (free, tool calling)"
+    "openrouter-hy3|OpenRouter — Tencent Hy3 (free, tool calling)"
+    "openrouter-nemotron|OpenRouter — Nemotron 3 Super 120B (free, tool calling)"
+    "openrouter-laguna|OpenRouter — Poolside Laguna M.1 (free, tool calling, coding)"
     "custom-model|Другая модель… → выбор провайдера и модели"
     "native-login|Нативный логин (Qwen OAuth / Coding Plan)"
     "change-api-key|Сменить ключ API провайдера"
@@ -50,7 +55,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"openrouter-qwen-coder"|"custom-qwen-zai"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
+        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"openrouter-qwen-coder"|"openrouter-hy3"|"openrouter-nemotron"|"openrouter-laguna"|"custom-qwen-zai"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -237,8 +242,23 @@ invoke_qwen_profile() {
         "zai-glm51")
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-5.1"
             ;;
+        "zai-flash47")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-4.7-flash"
+            ;;
+        "zai-flash45")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-4.5-flash"
+            ;;
         "openrouter-qwen-coder")
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "qwen/qwen3-coder:free"
+            ;;
+        "openrouter-hy3")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "tencent/hy3-preview:free"
+            ;;
+        "openrouter-nemotron")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "nvidia/nemotron-3-super-120b-a12b:free"
+            ;;
+        "openrouter-laguna")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "poolside/laguna-m.1:free"
             ;;
         "custom-qwen-zai")
             local state=$(get_launcher_state)

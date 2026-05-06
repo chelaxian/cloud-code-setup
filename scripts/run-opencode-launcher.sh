@@ -15,9 +15,14 @@ PROFILES=(
     "last|Запустить с последними настройками (быстрый старт)"
     "zai-glm|Z.AI — GLM-4.7 (free, tool calling)"
     "zai-glm51|Z.AI — GLM-5.1 (free, tool calling)"
+    "zai-flash47|Z.AI — GLM-4.7-Flash (free, tool calling)"
+    "zai-flash45|Z.AI — GLM-4.5-Flash (free, tool calling)"
     "nim-glm|NVIDIA NIM — GLM-4.7 (free, tool calling)"
     "nim-qwen|NVIDIA NIM — Qwen3.5-122B-A10B (free, tool calling)"
     "openrouter-qwen-coder|OpenRouter — Qwen3 Coder (free, tool calling)"
+    "openrouter-hy3|OpenRouter — Tencent Hy3 (free, tool calling)"
+    "openrouter-nemotron|OpenRouter — Nemotron 3 Super 120B (free, tool calling)"
+    "openrouter-laguna|OpenRouter — Poolside Laguna M.1 (free, tool calling, coding)"
     "custom-model|Другая модель… → выбор провайдера и модели"
     "native-login|Нативный логин (OpenCode Providers)"
     "change-api-key|Сменить ключ API провайдера"
@@ -51,7 +56,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "zai-glm"|"zai-glm51"|"nim-glm"|"nim-qwen"|"openrouter-qwen-coder"|"custom-opencode-zai"|"custom-opencode-nim"|"custom-opencode-groq"|"custom-opencode-openrouter")
+        "zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"nim-glm"|"nim-qwen"|"openrouter-qwen-coder"|"openrouter-hy3"|"openrouter-nemotron"|"openrouter-laguna"|"custom-opencode-zai"|"custom-opencode-nim"|"custom-opencode-groq"|"custom-opencode-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -193,6 +198,24 @@ invoke_opencode_profile() {
             echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-5.1)…${RESET}"
             "$opencode_exe"
             ;;
+        "zai-flash47")
+            local api_key
+            api_key=$(get_zai_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "zai" "glm-4.7-flash" "https://api.z.ai/api/openai/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-4.7-Flash)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "zai-flash45")
+            local api_key
+            api_key=$(get_zai_api_key) || return 1
+            local config_path
+            config_path=$(write_opencode_config "zai" "glm-4.5-flash" "https://api.z.ai/api/openai/v1" "$api_key")
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (Z.AI GLM-4.5-Flash)…${RESET}"
+            "$opencode_exe"
+            ;;
         "nim-glm")
             local api_key
             api_key=$(get_nim_api_key) || return 1
@@ -221,6 +244,33 @@ invoke_opencode_profile() {
             config_path=$(write_opencode_config "openrouter" "qwen/qwen3-coder:free" "https://openrouter.ai/api/v1" "$api_key" 8192 16384)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (OpenRouter Qwen3 Coder)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "openrouter-hy3")
+            local api_key="${OPENROUTER_API_KEY:-}"
+            if [ -z "$api_key" ]; then echo -e "${YELLOW}OpenRouter API ключ не задан.${RESET}" >&2; return 1; fi
+            local config_path
+            config_path=$(write_opencode_config "openrouter" "tencent/hy3-preview:free" "https://openrouter.ai/api/v1" "$api_key" 8192 262144)
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (OpenRouter Tencent Hy3)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "openrouter-nemotron")
+            local api_key="${OPENROUTER_API_KEY:-}"
+            if [ -z "$api_key" ]; then echo -e "${YELLOW}OpenRouter API ключ не задан.${RESET}" >&2; return 1; fi
+            local config_path
+            config_path=$(write_opencode_config "openrouter" "nvidia/nemotron-3-super-120b-a12b:free" "https://openrouter.ai/api/v1" "$api_key" 8192 262144)
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (OpenRouter Nemotron 3 Super)…${RESET}"
+            "$opencode_exe"
+            ;;
+        "openrouter-laguna")
+            local api_key="${OPENROUTER_API_KEY:-}"
+            if [ -z "$api_key" ]; then echo -e "${YELLOW}OpenRouter API ключ не задан.${RESET}" >&2; return 1; fi
+            local config_path
+            config_path=$(write_opencode_config "openrouter" "poolside/laguna-m.1:free" "https://openrouter.ai/api/v1" "$api_key" 8192 131072)
+            export OPENCODE_CONFIG="$config_path"
+            echo -e "${CYAN}Запуск OpenCode (OpenRouter Poolside Laguna M.1)…${RESET}"
             "$opencode_exe"
             ;;
         "custom-opencode-zai")

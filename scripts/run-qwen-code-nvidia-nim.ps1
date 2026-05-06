@@ -134,10 +134,50 @@ if ([string]::IsNullOrWhiteSpace($apiKey)) {
 $env:OPENAI_API_KEY = $apiKey
 
 $sessionRoot = Resolve-QwenNimSessionRoot $Model
-$projSettings = Join-Path $sessionRoot ".qwen\settings.json"
-if (-not (Test-Path -LiteralPath $projSettings)) {
-  throw "Не найден профиль сессии: $projSettings"
+$qwenDir = Join-Path $sessionRoot ".qwen"
+if (-not (Test-Path -LiteralPath $qwenDir)) { New-Item -ItemType Directory -Path $qwenDir -Force | Out-Null }
+
+# Определяем model ID для LiteLLM прокси
+$nimModelForProxy = switch ($Model) {
+  "nim-glm-4.7-tools" { "nim-glm-4.7-tools" }
+  "nim-qwen3.5-122b-a10b-tools" { "nim-qwen3.5-122b-a10b-tools" }
+  default { $Model }
 }
+
+# Перезаписываем settings.json с правильными NIM настройками
+$settingsJson = @{
+  modelProviders = @{
+    openai = @(
+      @{
+        id = $nimModelForProxy
+        name = "NVIDIA NIM — $nimModelForProxy (via LiteLLM proxy :4000)"
+        envKey = "OPENAI_API_KEY"
+        baseUrl = "http://127.0.0.1:4000/v1"
+        generationConfig = @{
+          timeout = 600000
+          maxRetries = 4
+          contextWindowSize = 131072
+          samplingParams = @{
+            temperature = 0.6
+            top_p = 0.95
+            max_tokens = 81920
+          }
+        }
+      }
+    )
+  }
+  security = @{
+    auth = @{
+      selectedType = "openai"
+    }
+  }
+  model = @{
+    name = $nimModelForProxy
+  }
+  '$version' = 3
+} | ConvertTo-Json -Depth 10
+
+$settingsJson | Set-Content -LiteralPath (Join-Path $qwenDir "settings.json") -Encoding UTF8
 
 $env:QWEN_CODE_MAX_OUTPUT_TOKENS = "81920"
 $env:QWEN_CODE_EMIT_TOOL_USE_SUMMARIES = "1"

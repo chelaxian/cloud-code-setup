@@ -27,6 +27,14 @@ $script:Profiles = @(
     Label = "Z.AI — GLM-5.1 (free, tool calling)"
   }
   @{
+    Id    = "zai-flash47"
+    Label = "Z.AI — GLM-4.7-Flash (free, tool calling)"
+  }
+  @{
+    Id    = "zai-flash45"
+    Label = "Z.AI — GLM-4.5-Flash (free, tool calling)"
+  }
+  @{
     Id    = "nim-glm"
     Label = "NVIDIA NIM — GLM-4.7 (free, tool calling)"
   }
@@ -37,6 +45,18 @@ $script:Profiles = @(
   @{
     Id    = "openrouter-qwen-coder"
     Label = "OpenRouter — Qwen3 Coder (free, tool calling)"
+  }
+  @{
+    Id    = "openrouter-hy3"
+    Label = "OpenRouter — Tencent Hy3 (free, tool calling)"
+  }
+  @{
+    Id    = "openrouter-nemotron"
+    Label = "OpenRouter — Nemotron 3 Super 120B (free, tool calling)"
+  }
+  @{
+    Id    = "openrouter-laguna"
+    Label = "OpenRouter — Poolside Laguna M.1 (free, tool calling, coding)"
   }
   @{
     Id    = "custom-model"
@@ -80,7 +100,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("zai-glm", "zai-glm51", "nim-glm", "nim-qwen", "openrouter-qwen-coder", "custom-opencode-zai", "custom-opencode-nim", "custom-opencode-groq", "custom-opencode-openrouter")) { return $id }
+  if ($id -in @("zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "nim-glm", "nim-qwen", "openrouter-qwen-coder", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-opencode-zai", "custom-opencode-nim", "custom-opencode-groq", "custom-opencode-openrouter")) { return $id }
   return $null
 }
 
@@ -221,6 +241,34 @@ function Invoke-OpenCodeProfile {
       & $opencodeExe
       return
     }
+    "zai-flash47" {
+      $apiKey = [Environment]::GetEnvironmentVariable("ZAI_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = $env:ZAI_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = [Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User") }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = $env:OPENAI_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        throw "Z.AI API ключ не задан. Задайте ZAI_API_KEY."
+      }
+      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-4.7-flash" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (Z.AI GLM-4.7-Flash)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "zai-flash45" {
+      $apiKey = [Environment]::GetEnvironmentVariable("ZAI_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = $env:ZAI_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = [Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User") }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") { $apiKey = $env:OPENAI_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey) -or $apiKey -eq "__SET_ME__") {
+        throw "Z.AI API ключ не задан. Задайте ZAI_API_KEY."
+      }
+      $configPath = Write-OpenCodeConfig -Provider "zai" -Model "glm-4.5-flash" -BaseURL "https://api.z.ai/api/openai/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (Z.AI GLM-4.5-Flash)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
     "nim-glm" {
       $apiKey = [Environment]::GetEnvironmentVariable("NVIDIA_NIM_API_KEY", "User")
       if ([string]::IsNullOrWhiteSpace($apiKey)) {
@@ -332,6 +380,36 @@ function Invoke-OpenCodeProfile {
       $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 16384
       $env:OPENCODE_CONFIG = $configPath
       Write-Host "Запуск OpenCode (OpenRouter Qwen3 Coder)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "openrouter-hy3" {
+      $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { throw "OpenRouter API ключ не задан." }
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "tencent/hy3-preview:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 262144
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (OpenRouter Tencent Hy3)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "openrouter-nemotron" {
+      $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { throw "OpenRouter API ключ не задан." }
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "nvidia/nemotron-3-super-120b-a12b:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 262144
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (OpenRouter Nemotron 3 Super)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "openrouter-laguna" {
+      $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { throw "OpenRouter API ключ не задан." }
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "poolside/laguna-m.1:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 131072
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (OpenRouter Poolside Laguna M.1)…" -ForegroundColor Cyan
       & $opencodeExe
       return
     }

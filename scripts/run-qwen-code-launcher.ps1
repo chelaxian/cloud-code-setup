@@ -38,8 +38,28 @@ $script:Profiles = @(
     Label       = "Z.AI — GLM-5.1 (free, tool calling)"
   }
   @{
+    Id          = "zai-flash47"
+    Label       = "Z.AI — GLM-4.7-Flash (free, tool calling)"
+  }
+  @{
+    Id          = "zai-flash45"
+    Label       = "Z.AI — GLM-4.5-Flash (free, tool calling)"
+  }
+  @{
     Id          = "openrouter-qwen-coder"
     Label       = "OpenRouter — Qwen3 Coder (free, tool calling)"
+  }
+  @{
+    Id          = "openrouter-hy3"
+    Label       = "OpenRouter — Tencent Hy3 (free, tool calling)"
+  }
+  @{
+    Id          = "openrouter-nemotron"
+    Label       = "OpenRouter — Nemotron 3 Super 120B (free, tool calling)"
+  }
+  @{
+    Id          = "openrouter-laguna"
+    Label       = "OpenRouter — Poolside Laguna M.1 (free, tool calling, coding)"
   }
   @{
     Id          = "custom-model"
@@ -83,7 +103,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "openrouter-qwen-coder", "custom-qwen-zai", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
+  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "openrouter-qwen-coder", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-qwen-zai", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
   return $null
 }
 
@@ -107,8 +127,28 @@ function Invoke-QwenProfile {
       & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai -ModelId "glm-5.1"
       return
     }
+    "zai-flash47" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai -ModelId "glm-4.7-flash"
+      return
+    }
+    "zai-flash45" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai -ModelId "glm-4.5-flash"
+      return
+    }
     "openrouter-qwen-coder" {
       & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "qwen/qwen3-coder:free"
+      return
+    }
+    "openrouter-hy3" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "tencent/hy3-preview:free"
+      return
+    }
+    "openrouter-nemotron" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "nvidia/nemotron-3-super-120b-a12b:free"
+      return
+    }
+    "openrouter-laguna" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "poolside/laguna-m.1:free"
       return
     }
     "custom-qwen-zai" {

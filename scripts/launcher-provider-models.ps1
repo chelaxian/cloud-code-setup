@@ -171,7 +171,9 @@ function Get-ZaiCodingModelIdsFromApi {
   }
   return @(
     "glm-4.7", "glm-4.7-flash", "glm-4.7-flashx",
-    "glm-4.6", "glm-4.6v", "glm-4.5", "glm-4.5-air", "glm-4.5-flash", "glm-4.5v",
+    "glm-4.6", "glm-4.6v", "glm-4.6v-flashx", "glm-4.6v-flash",
+    "glm-4.5", "glm-4.5-x", "glm-4.5-air", "glm-4.5-airx", "glm-4.5-flash", "glm-4.5v",
+    "glm-4-32b-0414-128k",
     "glm-5", "glm-5-turbo", "glm-5.1", "glm-5v-turbo"
   )
 }
@@ -186,10 +188,16 @@ function Resolve-NvidiaNimFreeClaudeModel {
 function Get-GroqModelIdsFromApi {
   param([Parameter(Mandatory = $true)][string]$ApiKey)
   $hdr = @{ "Authorization" = "Bearer $ApiKey"; "Content-Type" = "application/json" }
-  $resp = Invoke-LauncherJsonGet -Uri "https://api.groq.com/openai/v1/models" -Headers $hdr
-  if (-not $resp -or -not $resp.data) { return @() }
-  $ids = @($resp.data | Sort-Object -Property id | ForEach-Object { $_.id })
-  return $ids
+  try {
+    $resp = Invoke-LauncherJsonGet -Uri "https://api.groq.com/openai/v1/models" -Headers $hdr
+    if ($resp -and $resp.data) {
+      return @($resp.data | Sort-Object -Property id | ForEach-Object { $_.id })
+    }
+  } catch {
+    # Groq API может быть заблокирован в РФ (403) — fallback на статический список
+    Write-Host "Groq API недоступен (возможно заблокирован в РФ). Используем встроенный каталог." -ForegroundColor Yellow
+  }
+  return @(Get-GroqBundledFreeModelIds)
 }
 
 function Get-OpenRouterModelIdsFromApi {
