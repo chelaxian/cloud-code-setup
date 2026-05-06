@@ -103,7 +103,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "openrouter-qwen-coder", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-qwen-zai", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
+  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "openrouter-qwen-coder", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-qwen-zai", "custom-qwen-zai-general", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
   return $null
 }
 
@@ -158,6 +158,15 @@ function Invoke-QwenProfile {
         throw "В qwen-code-launcher-state.json нет customModelId для custom-qwen-zai. Выберите модель в пункте «Другая модель»."
       }
       & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai -ModelId $mid.Trim()
+      return
+    }
+    "custom-qwen-zai-general" {
+      $st = Get-LauncherState
+      $mid = [string]$st.customModelId
+      if ([string]::IsNullOrWhiteSpace($mid)) {
+        throw "Нет customModelId для custom-qwen-zai-general."
+      }
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider zai-general -ModelId $mid.Trim()
       return
     }
     "custom-qwen-nim" {
@@ -235,6 +244,7 @@ while ($true) {
     if ($true -eq $w.__menuBack) { continue }
     $newId = switch ($w.Provider) {
       "zai" { "custom-qwen-zai" }
+      "zai-general" { "custom-qwen-zai-general" }
       "groq" { "custom-qwen-groq" }
       "openrouter" { "custom-qwen-openrouter" }
       default { "custom-qwen-nim" }

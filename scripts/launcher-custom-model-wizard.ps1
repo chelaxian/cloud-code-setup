@@ -55,7 +55,8 @@ function Invoke-LauncherCustomModelWizard {
 
   $brand = $App
   $provItems = @(
-    [pscustomobject]@{ Id = "zai"; Label = "Z.AI — Coding / Anthropic (список моделей по вашему ключу)" }
+    [pscustomobject]@{ Id = "zai"; Label = "Z.AI — Coding endpoint (список моделей по вашему ключу)" }
+    [pscustomobject]@{ Id = "zai-general"; Label = "Z.AI — General endpoint (все модели, статический список)" }
     [pscustomobject]@{ Id = "nim"; Label = "NVIDIA NIM — полный каталог (GET /v1/models, все ID)" }
     [pscustomobject]@{ Id = "nim-bundled"; Label = "NVIDIA NIM — только free/preview (API ∩ встроенный список ~50)" }
     [pscustomobject]@{ Id = "nim-free"; Label = "NVIDIA NIM — free/preview (только статический список, без API)" }
@@ -98,6 +99,11 @@ function Invoke-LauncherCustomModelWizard {
         $null = Resolve-NimKeyForWizard
         $ids = @(Get-NvidiaNimBundledFreeModelIds)
       }
+      elseif ($provSource -eq "zai-general") {
+        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Z.AI General…"
+        $null = Resolve-ZaiKeyForWizard
+        $ids = @(Get-ZaiGeneralModelIds)
+      }
       elseif ($provSource -eq "groq") {
         Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Groq…"
         $key = Resolve-GroqKeyForWizard
@@ -139,9 +145,10 @@ function Invoke-LauncherCustomModelWizard {
       return $null
     }
 
-    $prov = if ($provSource -in @("nim", "nim-free", "nim-bundled")) { "nim" } elseif ($provSource -in @("groq", "groq-free")) { "groq" } elseif ($provSource -in @("openrouter", "openrouter-free")) { "openrouter" } else { $provSource }
+    $prov = if ($provSource -in @("nim", "nim-free", "nim-bundled")) { "nim" } elseif ($provSource -in @("groq", "groq-free")) { "groq" } elseif ($provSource -in @("openrouter", "openrouter-free")) { "openrouter" } elseif ($provSource -eq "zai-general") { "zai-general" } else { $provSource }
     $provLabel = switch ($provSource) {
-      "zai" { "Z.AI" }
+      "zai" { "Z.AI Coding" }
+      "zai-general" { "Z.AI General" }
       "nim" { "NIM (полный API)" }
       "nim-free" { "NIM free/preview (стат.)" }
       "nim-bundled" { "NIM (API ∩ free)" }

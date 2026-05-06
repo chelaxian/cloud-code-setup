@@ -55,7 +55,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"openrouter-qwen-coder"|"openrouter-hy3"|"openrouter-nemotron"|"openrouter-laguna"|"custom-qwen-zai"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
+        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"openrouter-qwen-coder"|"openrouter-hy3"|"openrouter-nemotron"|"openrouter-laguna"|"custom-qwen-zai"|"custom-qwen-zai-general"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -272,6 +272,17 @@ invoke_qwen_profile() {
             
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "$model_id"
             ;;
+        "custom-qwen-zai-general")
+            local state=$(get_launcher_state)
+            local model_id=$(echo "$state" | grep -o '"customModelId":"[^"]*"' | cut -d'"' -f4)
+            
+            if [ -z "$model_id" ]; then
+                echo -e "${RED}Нет customModelId для custom-qwen-zai-general.${RESET}"
+                return 1
+            fi
+            
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai-general -ModelId "$model_id"
+            ;;
         "custom-qwen-nim")
             local state=$(get_launcher_state)
             local model_id=$(echo "$state" | grep -o '"customModelId":"[^"]*"' | cut -d'"' -f4)
@@ -415,6 +426,8 @@ while true; do
             local new_id="custom-qwen-nim"
             if [ "$wiz_provider" = "zai" ]; then
                 new_id="custom-qwen-zai"
+            elif [ "$wiz_provider" = "zai-general" ]; then
+                new_id="custom-qwen-zai-general"
             elif [ "$wiz_provider" = "groq" ]; then
                 new_id="custom-qwen-groq"
             elif [ "$wiz_provider" = "openrouter" ]; then

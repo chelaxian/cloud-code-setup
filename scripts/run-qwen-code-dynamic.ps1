@@ -310,6 +310,39 @@ if ($Provider -eq "zai") {
   if ([string]::IsNullOrWhiteSpace($key) -or $key -eq "__SET_ME__") { $key = Read-SecretText "Z.AI API key" }
   $env:OPENAI_API_KEY = $key.Trim()
   $cfg = Build-QwenSettingsZai -Mid $ModelId.Trim()
+} elseif ($Provider -eq "zai-general") {
+  $key = [Environment]::GetEnvironmentVariable("ZAI_API_KEY", "User")
+  if ([string]::IsNullOrWhiteSpace($key) -or $key -eq "__SET_ME__") { $key = $env:ZAI_API_KEY }
+  if ([string]::IsNullOrWhiteSpace($key) -or $key -eq "__SET_ME__") { $key = [Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User") }
+  if ([string]::IsNullOrWhiteSpace($key) -or $key -eq "__SET_ME__") { $key = $env:OPENAI_API_KEY }
+  if ([string]::IsNullOrWhiteSpace($key) -or $key -eq "__SET_ME__") { $key = Read-SecretText "Z.AI API key" }
+  $env:OPENAI_API_KEY = $key.Trim()
+  $mid = $ModelId.Trim()
+  $cfg = @{
+    modelProviders = @{
+      openai = @(
+        @{
+          id              = $mid
+          name            = "Z.AI General — $mid"
+          envKey          = "OPENAI_API_KEY"
+          baseUrl         = "https://api.z.ai/api/paas/v4"
+          generationConfig = @{
+            timeout         = 600000
+            maxRetries      = 4
+            contextWindowSize = 131072
+            samplingParams  = @{
+              temperature = 0.6
+              top_p       = 0.95
+              max_tokens  = 8192
+            }
+          }
+        }
+      )
+    }
+    security  = @{ auth = @{ selectedType = "openai" } }
+    model     = @{ name = $mid }
+    '$version' = 3
+  }
 } elseif ($Provider -eq "groq") {
   $key = [Environment]::GetEnvironmentVariable("GROQ_API_KEY", "User")
   if ([string]::IsNullOrWhiteSpace($key)) { $key = $env:GROQ_API_KEY }

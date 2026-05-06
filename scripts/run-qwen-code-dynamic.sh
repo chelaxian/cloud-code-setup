@@ -51,6 +51,16 @@ case "$PROVIDER" in
     fi
     BASE_URL="https://api.z.ai/api/coding/paas/v4"
     ;;
+  zai-general)
+    API_KEY="${ZAI_API_KEY:-}"
+    if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
+      API_KEY="${OPENAI_API_KEY:-}"
+    fi
+    if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
+      API_KEY=$(get_api_key_interactive "Z.AI API key: ")
+    fi
+    BASE_URL="https://api.z.ai/api/paas/v4"
+    ;;
   nim)
     API_KEY="${NVIDIA_NIM_API_KEY:-}"
     if [ -z "$API_KEY" ]; then
