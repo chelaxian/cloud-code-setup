@@ -33,7 +33,7 @@ draw_box_line() {
     for ((i=0; i<width; i++)); do
         line+="$char"
     done
-    printf '%s' "$line"
+    printf '%s' "$line" >&3
 }
 
 move_cursor() {
@@ -43,7 +43,7 @@ move_cursor() {
 hide_cursor() { printf '\033[?25l' >&3; }
 show_cursor() { printf '\033[?25h' >&3; }
 
-# Read a single keypress from /dev/tty
+# Read a single keypress from /dev/tty - arrow keys only
 read_key() {
     local key
     IFS= read -rsn1 key < /dev/tty
@@ -74,7 +74,6 @@ read_key() {
         '') echo "enter"; return ;;
         $'\n'|$'\r') echo "enter"; return ;;
         $'\x7f') echo "backspace"; return ;;
-        [0-9]) echo "num_$key"; return ;;
     esac
     echo "other"
 }
@@ -182,7 +181,10 @@ show_tui_framed_menu() {
     local idx=0
     local scroll_top=0
 
-    trap 'show_cursor; printf "${RESET}" >&3; stty echo 2>/dev/null' EXIT
+    trap 'show_cursor; printf "${RESET}\n" >&3; stty echo 2>/dev/null' EXIT
+
+    # Flush any pending input
+    while IFS= read -rsn1 -t 0.01 _ < /dev/tty 2>/dev/null; do :; done
 
     sync_scroll() {
         if [ "$idx" -lt "$scroll_top" ]; then
@@ -288,7 +290,7 @@ show_tui_framed_menu() {
         printf '%*s' "$inner_width" '' >&3
         printf "${banner_color}║${RESET}\n" >&3
 
-        local hint="  ↑↓ выбор   Enter - OK   Esc - выход"
+        local hint="  ↑↓ выбор · Enter · Esc"
         local hint_len=${#hint}
         printf "${banner_color}║${RESET}${GRAY}${hint}${RESET}" >&3
         if [ "$hint_len" -lt "$inner_width" ]; then
@@ -350,38 +352,17 @@ show_tui_framed_menu() {
             enter)
                 show_cursor
                 trap - EXIT
+                # Flush any remaining input before returning
+                while IFS= read -rsn1 -t 0.01 _ < /dev/tty 2>/dev/null; do :; done
                 printf '%s\n' "$((idx + 1))"
                 return 0
                 ;;
             esc)
                 show_cursor
                 trap - EXIT
+                while IFS= read -rsn1 -t 0.01 _ < /dev/tty 2>/dev/null; do :; done
                 printf '0\n'
                 return 0
-                ;;
-            num_*)
-                local num="${key#num_}"
-                local typed="$num"
-                while true; do
-                    local next_key=$(read_key)
-                    case "$next_key" in
-                        num_*) typed+="${next_key#num_}" ;;
-                        enter) break ;;
-                        *) break ;;
-                    esac
-                done
-                if [[ "$typed" =~ ^[0-9]+$ ]] && [ "$typed" -ge 1 ] && [ "$typed" -le "$num_items" ]; then
-                    show_cursor
-                    trap - EXIT
-                    printf '%s\n' "$typed"
-                    return 0
-                elif [ "$typed" = "0" ]; then
-                    show_cursor
-                    trap - EXIT
-                    printf '0\n'
-                    return 0
-                fi
-                draw_menu
                 ;;
         esac
     done

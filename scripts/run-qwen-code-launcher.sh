@@ -237,6 +237,24 @@ invoke_qwen_custom_model_wizard() {
     done
 }
 
+# ── Проверка API ключа перед запуском ──────────────────────────────────────────
+require_api_key_for_profile() {
+    local profile_id="$1"
+    local env_var=""
+    local provider_name=""
+    local provider_url=""
+    
+    case "$profile_id" in
+        nim-*|custom-qwen-nim) env_var="NVIDIA_NIM"; provider_name="NVIDIA NIM"; provider_url="https://build.nvidia.com/api-key" ;;
+        zai-*|custom-qwen-zai*) env_var="ZAI"; provider_name="Z.AI"; provider_url="https://console.z.ai/" ;;
+        openrouter-*|custom-qwen-openrouter) env_var="OPENROUTER"; provider_name="OpenRouter"; provider_url="https://openrouter.ai/settings/keys" ;;
+        groq-*|custom-qwen-groq*) env_var="GROQ"; provider_name="Groq"; provider_url="https://console.groq.com/keys" ;;
+        *) return 0 ;;
+    esac
+    
+    ensure_api_key_or_prompt "$env_var" "$provider_name" "$provider_url"
+}
+
 # ── Профили ──────────────────────────────────────────────────────────────────
 invoke_qwen_profile() {
     local profile_id="$1"
@@ -492,6 +510,10 @@ while true; do
             save_launcher_state "$profile_id"
             ;;
     esac
+    
+    if ! require_api_key_for_profile "$profile_id"; then
+        continue
+    fi
     
     invoke_qwen_profile "$profile_id"
     exit $?

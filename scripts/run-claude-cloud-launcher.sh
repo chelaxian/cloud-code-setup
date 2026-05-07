@@ -99,7 +99,22 @@ resolve_api_key_or_prompt() {
 invoke_claude_cloud_profile() {
     local profile_id="$1"
     
-    clear
+    # Проверка API ключа
+    local env_var=""
+    local provider_name=""
+    local provider_url=""
+    case "$profile_id" in
+        claude-zai*|custom-claude-zai*) env_var="ZAI"; provider_name="Z.AI"; provider_url="https://console.z.ai/" ;;
+        claude-nim*|custom-claude-nim*) env_var="NVIDIA_NIM"; provider_name="NVIDIA NIM"; provider_url="https://build.nvidia.com/api-key" ;;
+        claude-openrouter*|custom-claude-openrouter*) env_var="OPENROUTER"; provider_name="OpenRouter"; provider_url="https://openrouter.ai/settings/keys" ;;
+    esac
+    if [ -n "$env_var" ]; then
+        if ! ensure_api_key_or_prompt "$env_var" "$provider_name" "$provider_url"; then
+            return 1
+        fi
+    fi
+    
+    clear >&3
     echo -e "${CYAN}Запуск сессии Claude Code (облако)…${RESET}"
     echo -e "${GRAY}Профиль: $profile_id   Vault: $VAULT_PATH${RESET}"
     

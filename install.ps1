@@ -1,39 +1,19 @@
 ﻿# cloud-code-setup - Windows bootstrap (PowerShell)
-# Запуск: irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1 | iex
-# Или: git clone + .\install.ps1
+# 1-click запуск (скопируйте целиком, вставьте в PowerShell и нажмите Enter):
+#   Set-ExecutionPolicy Bypass -Scope Process -Force; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; & powershell -File $(New-Item -Path "$env:TEMP\ccs-inst.ps1" -Value (irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1) -Force).FullName
+#
+# Короткий вариант (может зависнуть на корпоративных прокси):
+#   irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1 | iex
+#
+# Или: git clone https://github.com/chelaxian/cloud-code-setup.git && cd cloud-code-setup && .\install.ps1
 
-# TLS 1.2 для старых PowerShell (5.1 / Windows PowerShell)
-try {
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.ServicePointManager]::SecurityProtocol
-} catch {}
+# TLS 1.2 для PowerShell 5.1
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.ServicePointManager]::SecurityProtocol } catch {}
 
 $ErrorActionPreference = "Stop"
 
-# Параметры (по умолчанию, можно задать до вызова)
 if (-not $RepoUrl) { $RepoUrl = "https://github.com/chelaxian/cloud-code-setup.git" }
 if (-not $InstallDir) { $InstallDir = "" }
-
-# При irm|iex скрипт работает в "inline" режиме (нет $PSScriptRoot).
-# Пересохраняем себя как .ps1 файл и перезапускаем для корректной работы.
-if (-not $PSScriptRoot) {
-    $tmpFile = Join-Path $env:TEMP "cloud-code-setup-install.ps1"
-    try {
-        $MyInvocation.InvocationName | Out-Null  # just access to trigger
-        # При iex $PSScriptRoot пустой — пересохраняем и запускаем как файл
-        $scriptContent = $MyInvocation.CommandOrigin
-    } catch {}
-    # Получаем себя из сети и запускаем как файл
-    Write-Host "cloud-code-setup :: preparing 1-click install..." -ForegroundColor Cyan
-    try {
-        $irm = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1" -UseBasicParsing
-        [System.IO.File]::WriteAllText($tmpFile, $irm.Content, (New-Object System.Text.UTF8Encoding($false)))
-        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $tmpFile
-    } catch {
-        Write-Host "ERROR: Failed to download installer. Error: $_" -ForegroundColor Red
-        Write-Host "Alternative: git clone https://github.com/chelaxian/cloud-code-setup.git && cd cloud-code-setup && .\install.ps1" -ForegroundColor Yellow
-    }
-    return
-}
 
 Write-Host "cloud-code-setup :: starting..." -ForegroundColor Cyan
 

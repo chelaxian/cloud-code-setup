@@ -210,6 +210,21 @@ get_openrouter_api_key() {
 invoke_opencode_profile() {
     local profile_id="$1"
     
+    # Проверка API ключа
+    local env_var=""
+    local provider_name=""
+    local provider_url=""
+    case "$profile_id" in
+        zai-*|custom-opencode-zai*) env_var="ZAI"; provider_name="Z.AI"; provider_url="https://console.z.ai/" ;;
+        nim-*|custom-opencode-nim*) env_var="NVIDIA_NIM"; provider_name="NVIDIA NIM"; provider_url="https://build.nvidia.com/api-key" ;;
+        openrouter-*|custom-opencode-openrouter*) env_var="OPENROUTER"; provider_name="OpenRouter"; provider_url="https://openrouter.ai/settings/keys" ;;
+    esac
+    if [ -n "$env_var" ]; then
+        if ! ensure_api_key_or_prompt "$env_var" "$provider_name" "$provider_url"; then
+            return 1
+        fi
+    fi
+    
     local opencode_exe
     opencode_exe=$(resolve_opencode_exe) || true
     if [ -z "$opencode_exe" ]; then
