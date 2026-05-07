@@ -157,8 +157,8 @@ MESSAGING_PLATFORM="none"
 ENABLE_WEB_SERVER_TOOLS=false
 ENVEOF
 
-    # Warm deps once (prevents long first-run hang)
-    (cd "$FCC_DIR" && uv sync &>/dev/null) || true
+    # Warm deps once (prevents long first-run hang) — timeout-safe
+    timeout 30 sh -c 'cd "$1" && uv sync &>/dev/null' _ "$FCC_DIR" 2>/dev/null || true
 
     # Start proxy in background (log to file for debugging)
     local log_file="$FCC_DIR/fcc-${port}.log"
@@ -166,16 +166,23 @@ ENVEOF
     printf "${GRAY}Логи: ${log_file}${RESET}\n" >&3
 
     # Use nohup + disown so the process survives shell exits
-    nohup sh -c "cd '$FCC_DIR' && uv run uvicorn server:app --host 127.0.0.1 --port '$port' --log-level warning" >>"$log_file" 2>&1 &
+    # </dev/null: fully detach stdin so parent shell never blocks on pipe
+    nohup sh -c "cd '$FCC_DIR' && uv run uvicorn server:app --host 127.0.0.1 --port '$port' --log-level warning" </dev/null >>"$log_file" 2>&1 &
     local proxy_pid=$!
     disown "$proxy_pid" 2>/dev/null || true
 
-    # Wait for proxy TCP port to become available
+    # Brief pause for process to begin initializing
+    sleep 0.5
+
+    # Wait for proxy TCP port to become available (show progress)
     local tries=0
+    printf "${GRAY}  Ожидание TCP" >&3
     while [ $tries -lt 30 ]; do
         if nc -z 127.0.0.1 "$port" 2>/dev/null; then
+            printf " ✓${RESET}\n" >&3
             break
         fi
+        printf "." >&3
         sleep 1
         tries=$((tries + 1))
     done
@@ -364,14 +371,15 @@ with open('$settings_file','w') as f: json.dump(d,f,indent=2)
     printf "${GRAY}Директория сессий: $(pwd)${RESET}\n" >&3
     printf "\n" >&3
     
-    "$claude_exe"
+    # exec: replace shell with claude so no parent waits / hangs
+    exec "$claude_exe"
 }
 
 # ── API key helpers ──────────────────────────────────────────────────────────
 get_claude_zai_api_key() {
     local key="${ZAI_API_KEY:-}"
     if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
-        key="${OPENAI_API_KEY:-}"
+        key=$(get_current_api_key "ZAI")
     fi
     if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
         printf "${YELLOW}Z.AI API ключ не задан.${RESET}\n" >&3
@@ -392,6 +400,9 @@ get_claude_zai_api_key() {
 get_claude_nim_api_key() {
     local key="${NVIDIA_NIM_API_KEY:-}"
     if [ -z "$key" ]; then
+        key=$(get_current_api_key "NVIDIA_NIM")
+    fi
+    if [ -z "$key" ]; then
         printf "${YELLOW}NVIDIA NIM API ключ не задан.${RESET}\n" >&3
         printf "${CYAN}Получить ключ: https://build.nvidia.com/api-key${RESET}\n" >&3
         local input
@@ -409,6 +420,9 @@ get_claude_nim_api_key() {
 
 get_claude_openrouter_api_key() {
     local key="${OPENROUTER_API_KEY:-}"
+    if [ -z "$key" ]; then
+        key=$(get_current_api_key "OPENROUTER")
+    fi
     if [ -z "$key" ]; then
         printf "${YELLOW}OpenRouter API ключ не задан.${RESET}\n" >&3
         printf "${CYAN}Получить ключ: https://openrouter.ai/settings/keys${RESET}\n" >&3

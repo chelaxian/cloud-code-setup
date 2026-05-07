@@ -22,6 +22,8 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+. "$SCRIPT_DIR/launcher-api-keys.sh"
+
 # ── Безопасное имя для директории ──
 safe_dir_name() {
   echo "$1" | sed 's/[^a-zA-Z0-9._-]/_/g'
@@ -55,7 +57,7 @@ case "$PROVIDER" in
   zai)
     API_KEY="${ZAI_API_KEY:-}"
     if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
-      API_KEY="${OPENAI_API_KEY:-}"
+      API_KEY=$(get_current_api_key "ZAI")
     fi
     if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
       API_KEY=$(get_api_key_with_url "Z.AI API key: " "https://console.z.ai/")
@@ -65,7 +67,7 @@ case "$PROVIDER" in
   zai-general)
     API_KEY="${ZAI_API_KEY:-}"
     if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
-      API_KEY="${OPENAI_API_KEY:-}"
+      API_KEY=$(get_current_api_key "ZAI")
     fi
     if [ -z "$API_KEY" ] || [ "$API_KEY" = "__SET_ME__" ]; then
       API_KEY=$(get_api_key_with_url "Z.AI API key: " "https://console.z.ai/")
@@ -75,6 +77,9 @@ case "$PROVIDER" in
   nim)
     API_KEY="${NVIDIA_NIM_API_KEY:-}"
     if [ -z "$API_KEY" ]; then
+      API_KEY=$(get_current_api_key "NVIDIA_NIM")
+    fi
+    if [ -z "$API_KEY" ]; then
       API_KEY=$(get_api_key_with_url "NVIDIA NIM API key: " "https://build.nvidia.com/api-key")
     fi
     BASE_URL="https://integrate.api.nvidia.com/v1"
@@ -82,12 +87,18 @@ case "$PROVIDER" in
   groq)
     API_KEY="${GROQ_API_KEY:-}"
     if [ -z "$API_KEY" ]; then
+      API_KEY=$(get_current_api_key "GROQ")
+    fi
+    if [ -z "$API_KEY" ]; then
       API_KEY=$(get_api_key_with_url "Groq API key: " "https://console.groq.com/keys")
     fi
     BASE_URL="https://api.groq.com/openai/v1"
     ;;
   openrouter)
     API_KEY="${OPENROUTER_API_KEY:-}"
+    if [ -z "$API_KEY" ]; then
+      API_KEY=$(get_current_api_key "OPENROUTER")
+    fi
     if [ -z "$API_KEY" ]; then
       API_KEY=$(get_api_key_with_url "OpenRouter API key: " "https://openrouter.ai/settings/keys")
     fi
@@ -211,4 +222,9 @@ fi
 
 echo -e "\033[36mQwen Code: $PROVIDER / модель $MODEL_ID → $SESSION_ROOT\033[0m"
 cd "$SESSION_ROOT"
+
+# Ensure UTF-8 locale for proper handling of non-ASCII input
+export LC_ALL="${LC_ALL:-C.UTF-8}"
+export LANG="${LANG:-C.UTF-8}"
+
 exec "$QWEN_EXE"

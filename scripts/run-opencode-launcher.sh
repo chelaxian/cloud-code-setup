@@ -150,7 +150,7 @@ EOFJSON
 get_zai_api_key() {
     local key="${ZAI_API_KEY:-}"
     if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
-        key="${OPENAI_API_KEY:-}"
+        key=$(get_current_api_key "ZAI")
     fi
     if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then
         printf "${YELLOW}Z.AI API ключ не задан.${RESET}\n" >&3
@@ -169,6 +169,9 @@ get_zai_api_key() {
 get_nim_api_key() {
     local key="${NVIDIA_NIM_API_KEY:-}"
     if [ -z "$key" ]; then
+        key=$(get_current_api_key "NVIDIA_NIM")
+    fi
+    if [ -z "$key" ]; then
         printf "${YELLOW}NVIDIA NIM API ключ не задан.${RESET}\n" >&3
         printf "${CYAN}Получить ключ: https://build.nvidia.com/api-key${RESET}\n" >&3
         local input
@@ -185,6 +188,9 @@ get_nim_api_key() {
 get_groq_api_key() {
     local key="${GROQ_API_KEY:-}"
     if [ -z "$key" ]; then
+        key=$(get_current_api_key "GROQ")
+    fi
+    if [ -z "$key" ]; then
         printf "${YELLOW}Groq API ключ не задан.${RESET}\n" >&3
         printf "${CYAN}Получить ключ: https://console.groq.com/keys${RESET}\n" >&3
         local input
@@ -200,6 +206,9 @@ get_groq_api_key() {
 
 get_openrouter_api_key() {
     local key="${OPENROUTER_API_KEY:-}"
+    if [ -z "$key" ]; then
+        key=$(get_current_api_key "OPENROUTER")
+    fi
     if [ -z "$key" ]; then
         printf "${YELLOW}OpenRouter API ключ не задан.${RESET}\n" >&3
         printf "${CYAN}Получить ключ: https://openrouter.ai/settings/keys${RESET}\n" >&3
