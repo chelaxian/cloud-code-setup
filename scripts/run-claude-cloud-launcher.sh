@@ -32,7 +32,7 @@ PROFILES=(
     "claude-nim|NVIDIA NIM - GLM-4.7 (free, tool calling)"
     "claude-nim-qwen|NVIDIA NIM - Qwen3.5-122B-A10B (free, tool calling)"
     "claude-openrouter-sonnet|OpenRouter - Claude Sonnet 4 (paid, tool calling)"
-    "claude-openrouter-qwen-coder|OpenRouter - Qwen3 Coder (free, tool calling)"
+    "claude-openrouter-deepseek-r1|OpenRouter - DeepSeek R1 (free, reasoning)"
     "claude-openrouter-hy3|OpenRouter - Tencent Hy3 (free, tool calling)"
     "claude-openrouter-nemotron|OpenRouter - Nemotron 3 Super 120B (free, tool calling)"
     "claude-openrouter-laguna|OpenRouter - Poolside Laguna M.1 (free, tool calling, coding)"
@@ -69,7 +69,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
 
     case "$profile_id" in
-        "claude-zai"|"claude-zai-glm51"|"claude-zai-flash47"|"claude-zai-flash45"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-sonnet"|"claude-openrouter-qwen-coder"|"claude-openrouter-hy3"|"claude-openrouter-nemotron"|"claude-openrouter-laguna"|"custom-claude-zai"|"custom-claude-zai-general"|"custom-claude-nim"|"custom-claude-openrouter")
+        "claude-zai"|"claude-zai-glm51"|"claude-zai-flash47"|"claude-zai-flash45"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-sonnet"|"claude-openrouter-deepseek-r1"|"claude-openrouter-hy3"|"claude-openrouter-nemotron"|"claude-openrouter-laguna"|"custom-claude-zai"|"custom-claude-zai-general"|"custom-claude-nim"|"custom-claude-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -257,7 +257,7 @@ invoke_claude_cloud_profile() {
         claude-openrouter*|custom-claude-openrouter*)
             local fcc_model="open_router/anthropic/claude-sonnet-4-20250514"
             case "$profile_id" in
-                "claude-openrouter-qwen-coder") fcc_model="open_router/qwen/qwen3-coder:free" ;;
+                "claude-openrouter-deepseek-r1") fcc_model="open_router/deepseek/deepseek-r1:free" ;;
                 "claude-openrouter-hy3") fcc_model="open_router/tencent/hy3-preview:free" ;;
                 "claude-openrouter-nemotron") fcc_model="open_router/nvidia/nemotron-3-super-120b-a12b:free" ;;
                 "claude-openrouter-laguna") fcc_model="open_router/poolside/laguna-m.1:free" ;;

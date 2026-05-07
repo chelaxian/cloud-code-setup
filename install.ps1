@@ -1,6 +1,6 @@
 # cloud-code-setup - 1-click Windows installer
-# Usage: irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1 | iex
-# This bootstrap downloads the full installer to a temp file and runs it
+# Usage (PowerShell 5.1+):
+#   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1 | iex
 
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.ServicePointManager]::SecurityProtocol } catch {}
 
@@ -14,6 +14,9 @@ try {
     Invoke-WebRequest -Uri $url -OutFile $tmpFile -UseBasicParsing
 } catch {
     Write-Host "  ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "  TLS error? Run this first:" -ForegroundColor Yellow
+    Write-Host "  [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12" -ForegroundColor White
     Read-Host "Press Enter to exit"
     return
 }

@@ -238,6 +238,26 @@ if $INSTALL_CLAUDE; then
     else
         warn "Не удалось установить Claude Code CLI. Установите вручную: npm i -g @anthropic-ai/claude-code"
     fi
+
+    # free-claude-code proxy for NIM/OpenRouter
+    FCC_DIR="$HOME/.free-claude-code"
+    echo -e "${CYAN}Установка free-claude-code proxy (для NIM/OpenRouter)…${RESET}"
+    if ! command -v uv &>/dev/null; then
+        echo -e "${CYAN}  Установка uv…${RESET}"
+        curl -LsSf https://astral.sh/uv/install.sh | sh 2>/dev/null
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
+    if [ ! -d "$FCC_DIR" ]; then
+        git clone https://github.com/Alishahryar1/free-claude-code.git "$FCC_DIR" 2>/dev/null
+        if [ -d "$FCC_DIR" ]; then
+            ok "free-claude-code: $FCC_DIR"
+        else
+            warn "Не удалось клонировать free-claude-code. NIM/OpenRouter будут недоступны."
+        fi
+    else
+        (cd "$FCC_DIR" && git pull origin main 2>/dev/null) || true
+        ok "free-claude-code: обновлён"
+    fi
 fi
 
 if $INSTALL_OPENCODE; then
