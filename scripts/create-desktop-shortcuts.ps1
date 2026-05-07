@@ -26,9 +26,10 @@ $ws = New-Object -ComObject WScript.Shell
 
 $launcherClaude = Join-Path $RepoRoot "scripts\run-claude-cloud-launcher.ps1"
 $launcherQwen   = Join-Path $RepoRoot "scripts\run-qwen-code-launcher.ps1"
+$launcherOpenCode = Join-Path $RepoRoot "scripts\run-opencode-launcher.ps1"
 $memScript      = Join-Path $RepoRoot "scripts\start-claude-mem.ps1"
 
-foreach ($p in @($launcherClaude, $launcherQwen, $memScript)) {
+foreach ($p in @($launcherClaude, $launcherQwen, $launcherOpenCode, $memScript)) {
   if (-not (Test-Path -LiteralPath $p)) { throw "Не найден файл: $p" }
 }
 
@@ -68,6 +69,14 @@ New-Shortcut `
   -Description "Qwen Code: Z.AI Coding / NVIDIA NIM - меню. Пресеты NIM без изменений. Другая модель NIM: локальный прокси string-content + минимальный режим. У Claude для таких NIM - free-claude-code и --tools minimal. Z.AI без ограничений."
 
 New-Shortcut `
+  -LinkPath (Join-Path $DesktopPath "OpenCode (cloud).lnk") `
+  -TargetPath $cmdExe `
+  -Arguments ('/k chcp 65001 >nul & ' + $psExe + ' -NoProfile -ExecutionPolicy Bypass -File "' + $launcherOpenCode + '"') `
+  -WorkingDirectory $RepoRoot `
+  -Icon $IconLocation `
+  -Description "OpenCode: Z.AI / NIM / OpenRouter - меню выбора модели."
+
+New-Shortcut `
   -LinkPath (Join-Path $DesktopPath "Claude Mem Start.lnk") `
   -TargetPath $psExe `
   -Arguments ('-NoProfile -ExecutionPolicy Bypass -File "' + $memScript + '" -OpenBrowser 0') `
@@ -83,5 +92,5 @@ New-Shortcut `
   -Icon $IconLocation `
   -Description "claude-mem: старт при необходимости и открыть http://127.0.0.1:37777/"
 
-Write-Host "Shortcuts created on desktop: Claude Code (cloud), Qwen Code (cloud), Claude Mem Start, Claude Mem Viewer." -ForegroundColor Green
+Write-Host "Shortcuts created on desktop: Claude Code (cloud), Qwen Code (cloud), OpenCode (cloud), Claude Mem Start, Claude Mem Viewer." -ForegroundColor Green
 Write-Host "RepoRoot=$RepoRoot  Desktop=$DesktopPath" -ForegroundColor DarkGray
