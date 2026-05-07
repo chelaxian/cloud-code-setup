@@ -1,0 +1,3 @@
+# Prevent BOM in PowerShell scripts
+*.ps1 text eol=lf working-tree-encoding=utf-8
+*.sh text eol=lf
