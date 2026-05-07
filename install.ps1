@@ -1,14 +1,12 @@
-﻿# cloud-code-setup — Windows bootstrap (PowerShell)
+﻿# cloud-code-setup - Windows bootstrap (PowerShell)
 # Запуск: irm https://raw.githubusercontent.com/chelaxian/cloud-code-setup/main/install.ps1 | iex
 # Или: git clone + .\install.ps1
 
-[CmdletBinding()]
-param(
-    [string]$RepoUrl = "https://github.com/chelaxian/cloud-code-setup.git",
-    [string]$InstallDir = ""
-)
-
 $ErrorActionPreference = "Stop"
+
+# Параметры (по умолчанию, можно задать до вызова)
+if (-not $RepoUrl) { $RepoUrl = "https://github.com/chelaxian/cloud-code-setup.git" }
+if (-not $InstallDir) { $InstallDir = "" }
 
 function Write-Status($Text, $Color = "White") {
     Write-Host $Text -ForegroundColor $Color
@@ -25,14 +23,13 @@ if (-not $InstallDir) {
 Clear-Host
 Write-Status "════════════════════════════════════════════════════════════════════════════════" "Cyan"
 Write-Status "" "Cyan"
-Write-Status "   ██████╗██╗      ██████╗██╗  ██╗███████╗   ██████╗ ███████╗ ██████╗ ███████╗" "Cyan"
-Write-Status "  ██╔════╝██║     ██╔════╝██║ ██╔╝██╔════╝   ██╔══██╗██╔════╝██╔════╝ ██╔════╝" "Cyan"
-Write-Status "  ██║     ██║     ██║     █████╔╝ ███████╗   ██████╔╝█████╗  ██║  ███╗█████╗  " "Cyan"
-Write-Status "  ██║     ██║     ██║     ██╔═██╗ ╚════██║   ██╔══██╗██╔══╝  ██║   ██║██╔══╝  " "Cyan"
-Write-Status "  ╚██████╗███████╗╚██████╗██║  ██╗███████║   ██║  ██║███████╗╚██████╔╝███████╗" "Cyan"
-Write-Status "   ╚═════╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚══════╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚══════╝" "Cyan"
+Write-Status "   ____ _     ____ _____ ____  ___  ____     ____ _   _ ____ _____ ____  " "Cyan"
+Write-Status "  / ___| |   / ___|_   _|  _ \|_ _| __ )   / ___| | | / ___|_   _|  _ \ " "Cyan"
+Write-Status " | |   | |   \___ \ | | | |_) || ||  _ \  | |   | | | \___ \ | | | | | |" "Cyan"
+Write-Status " | |___| |___ ___) || | |  _ < | || |_) | | |___| |_| |___) || | | |_| |" "Cyan"
+Write-Status "  \____|_____|____/ |_| |_| \_\___|____/   \____|\___/|____/ |_| |____/ " "Cyan"
 Write-Status "" "Cyan"
-Write-Status "            C L O U D   S E T U P      1-click install" "Yellow"
+Write-Status "              C L O U D   S E T U P  -  1-click install" "Yellow"
 Write-Status "" "Cyan"
 Write-Status "  Qwen Code + Claude Code + OpenCode" "Yellow"
 Write-Status "" "Cyan"
