@@ -115,6 +115,27 @@ if ($RepairInstall) {
 
 # Сброс «зависшего» worker.pid: внутренний worker-service сразу exit(0), если считает дубликат - тогда HTTP не поднимается.
 Write-Host "claude-mem: остановка и очистка stale PID…" -ForegroundColor DarkCyan
+
+# Auto-install claude-mem if missing
+if (-not (Get-Command claude-mem -ErrorAction SilentlyContinue)) {
+  $pluginDir = Join-Path $HOME ".claude\plugins\marketplaces\thedotmack\plugin"
+  $workerScript = Join-Path $pluginDir "scripts\worker-service.cjs"
+  if (-not (Test-Path -LiteralPath $workerScript)) {
+    Write-Host "claude-mem не установлен. Выполняю установку..." -ForegroundColor Cyan
+    & npx.cmd --yes claude-mem install 2>$null
+    if ($LASTEXITCODE -ne 0) {
+      # Try npm global install as fallback
+      & npm.cmd install -g claude-mem@latest 2>$null
+      & npx.cmd --yes claude-mem install 2>$null
+    }
+    if (-not (Test-Path -LiteralPath $workerScript)) {
+      Write-Host "claude-mem: не удалось установить. Пропуск." -ForegroundColor Red
+      exit 1
+    }
+    Write-Host "claude-mem: установлен." -ForegroundColor Green
+  }
+}
+
 try { npx --yes claude-mem stop 2>$null } catch {}
 Start-Sleep -Milliseconds 500
 if (Test-Path -LiteralPath $pidFile) {

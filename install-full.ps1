@@ -466,22 +466,52 @@ if ($installClaude) {
     Write-Status "Claude: установка доп. компонентов (claude-mem, Obsidian)..." "Magenta"
 
     # claude-mem - полная установка
+    Write-Status "  Установка claude-mem через npm..." "Cyan"
     $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-    & npm.cmd install -g claude-mem@latest 2>$null
+    $npmOut = & npm.cmd install -g claude-mem@latest 2>&1
+    $npmExit = $LASTEXITCODE
     $ErrorActionPreference = $prevEAP
+    
     $claudeMemInstalled = $false
-    if (Get-Command claude-mem -ErrorAction SilentlyContinue) {
-        Write-Status "  [OK] claude-mem установлен" "Green"
+    $claudeMemCmd = Get-Command claude-mem -ErrorAction SilentlyContinue
+    
+    if (-not $claudeMemCmd -and $npmExit -ne 0) {
+        Write-Status "  npm install не удался (код: $npmExit). Пробуем npx claude-mem install..." "Yellow"
+    }
+    
+    # Even if npm install succeeded, run 'claude-mem install' to initialise plugin dirs
+    if ($claudeMemCmd) {
+        Write-Status "  Инициализация claude-mem..." "Cyan"
+        $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+        & claude-mem install 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            & npx.cmd --yes claude-mem install 2>$null
+        }
+        $ErrorActionPreference = $prevEAP
+        Write-Status "  [OK] claude-mem установлен и инициализирован" "Green"
         $claudeMemInstalled = $true
     } else {
-        Write-Status "  Установка claude-mem через npx (первый запуск)…" "Cyan"
+        # npm didn't create a binary — try npx to install and init
+        Write-Status "  Установка claude-mem через npx (полная инициализация)…" "Cyan"
+        $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
         & npx.cmd --yes claude-mem install 2>$null
-        if (Get-Command claude-mem -ErrorAction SilentlyContinue) {
+        $ErrorActionPreference = $prevEAP
+        $claudeMemCmd = Get-Command claude-mem -ErrorAction SilentlyContinue
+        if ($claudeMemCmd) {
             Write-Status "  [OK] claude-mem установлен через npx" "Green"
             $claudeMemInstalled = $true
         } else {
-            Write-Status "  [WARN] claude-mem не найден (будет подтягиваться через npx при первом запуске)" "Yellow"
+            Write-Status "  [WARN] claude-mem не установлен глобально. Будет запускаться через npx (медленнее)." "Yellow"
         }
+    }
+    
+    # Verify plugin directory exists (claude-mem needs this to run)
+    $pluginDir = Join-Path $env:USERPROFILE ".claude\plugins\marketplaces\thedotmack\plugin"
+    if (-not (Test-Path -LiteralPath $pluginDir)) {
+        Write-Status "  Создание директории плагина claude-mem..." "Cyan"
+        $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+        & npx.cmd --yes claude-mem install 2>$null
+        $ErrorActionPreference = $prevEAP
     }
 
     # uv (Python package manager for free-claude-code)
