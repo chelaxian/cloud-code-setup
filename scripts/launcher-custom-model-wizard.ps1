@@ -60,8 +60,8 @@ function Invoke-LauncherCustomModelWizard {
     [pscustomobject]@{ Id = "nim"; Label = "NVIDIA NIM - полный каталог (GET /v1/models, все ID)" }
     [pscustomobject]@{ Id = "nim-bundled"; Label = "NVIDIA NIM - только free/preview (API ∩ встроенный список ~50)" }
     [pscustomobject]@{ Id = "nim-free"; Label = "NVIDIA NIM - free/preview (только статический список, без API)" }
-    [pscustomobject]@{ Id = "groq"; Label = "Groq - полный каталог моделей (GET /v1/models)" }
-    [pscustomobject]@{ Id = "groq-free"; Label = "Groq - только бесплатные модели (статический список)" }
+    [pscustomobject]@{ Id = "groq"; Label = "Groq - полный каталог моделей (paid, GET /v1/models)" }
+    [pscustomobject]@{ Id = "groq-free"; Label = "Groq - статический список популярных моделей (paid)" }
     [pscustomobject]@{ Id = "openrouter"; Label = "OpenRouter - полный каталог моделей (GET /v1/models)" }
     [pscustomobject]@{ Id = "openrouter-free"; Label = "OpenRouter - только бесплатные модели (статический список)" }
   )
@@ -105,12 +105,12 @@ function Invoke-LauncherCustomModelWizard {
         $ids = @(Get-ZaiGeneralModelIds)
       }
       elseif ($provSource -eq "groq") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Groq…"
+        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Groq (paid)…"
         $key = Resolve-GroqKeyForWizard
         $ids = @(Get-GroqModelIdsFromApi -ApiKey $key)
       }
       elseif ($provSource -eq "groq-free") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка бесплатных моделей Groq…"
+        Show-TuiWaitFrame -AppBrand $brand -Message "Groq (статический список, pay-per-token)…"
         $null = Resolve-GroqKeyForWizard
         $ids = @(Get-GroqBundledFreeModelIds)
       }
@@ -152,8 +152,8 @@ function Invoke-LauncherCustomModelWizard {
       "nim" { "NIM (полный API)" }
       "nim-free" { "NIM free/preview (стат.)" }
       "nim-bundled" { "NIM (API ∩ free)" }
-      "groq" { "Groq (полный API)" }
-      "groq-free" { "Groq free (стат.)" }
+      "groq" { "Groq (paid API)" }
+      "groq-free" { "Groq (paid, стат.)" }
       "openrouter" { "OpenRouter (полный API)" }
       "openrouter-free" { "OpenRouter free (стат.)" }
       default { $provSource.ToUpper() }

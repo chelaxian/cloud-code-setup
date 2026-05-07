@@ -360,35 +360,8 @@ if ($Provider -eq "zai") {
     $key = Read-SecretText "Введите Groq API key"
   }
   $env:OPENAI_API_KEY = $key.Trim()
-  # Groq free tier: очень низкий TPM (6-12K). Урезаем контекст и пропускаем startup context.
-  $groqCtx = 4096
-  $groqMaxTok = 2048
-  $groqMaxOut = 2048
-  $groqMid = $ModelId.Trim().ToLowerInvariant()
-  if ($groqMid -match "qwen3-32b") {
-    $groqCtx = 4096
-    $groqMaxTok = 2048
-    $groqMaxOut = 2048
-  } elseif ($groqMid -match "llama-3\.3-70b") {
-    $groqCtx = 4096
-    $groqMaxTok = 2048
-    $groqMaxOut = 2048
-  } elseif ($groqMid -match "llama-3\.1-8b") {
-    $groqCtx = 4096
-    $groqMaxTok = 2048
-    $groqMaxOut = 2048
-  } elseif ($groqMid -match "llama-4-scout") {
-    $groqMaxTok = 4096
-    $groqMaxOut = 4096
-  } elseif ($groqMid -match "gpt-oss-120b") {
-    $groqMaxTok = 4096
-    $groqMaxOut = 4096
-  } elseif ($groqMid -match "gpt-oss-20b") {
-    $groqMaxTok = 4096
-    $groqMaxOut = 4096
-  }
-  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://api.groq.com/openai/v1" -ContextWindowSize $groqCtx -MaxTokens $groqMaxTok -SkipStartupContext
-  $script:GroqMaxOutput = $groqMaxOut
+  $cfg = Build-QwenSettingsOpenAI -Mid $ModelId.Trim() -BaseUrl "https://api.groq.com/openai/v1" -ContextWindowSize 131072 -MaxTokens 8192
+  $script:GroqMaxOutput = 81920
 } elseif ($Provider -eq "openrouter") {
   $key = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
   if ([string]::IsNullOrWhiteSpace($key)) { $key = $env:OPENROUTER_API_KEY }
@@ -461,18 +434,7 @@ if ($Provider -eq "nim" -and $script:NimDynamicCompat -and $script:NimCompatLimi
 
 Push-Location $sessionRoot
 try {
-  if ($Provider -eq "groq") {
-    Write-Host ""
-    Write-Host "╔══════════════════════════════════════════════════════════════════╗" -ForegroundColor Yellow
-    Write-Host "║  Groq free tier: контекст уменьшен до 4K для стабильности.      ║" -ForegroundColor Yellow
-    Write-Host "║  Agent mode работает с ограничениями TPM.                       ║" -ForegroundColor Yellow
-    Write-Host "║  Для полного agent mode используйте Z.AI / NIM / OpenRouter.    ║" -ForegroundColor Yellow
-    Write-Host "╚══════════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
-    Write-Host ""
-    & $qwenExe
-  } else {
-    & $qwenExe
-  }
+  & $qwenExe
 } finally {
   Pop-Location
 }

@@ -160,8 +160,8 @@ invoke_qwen_custom_model_wizard() {
     local prov_items=(
         "zai|Z.AI - Coding / Anthropic (список моделей по вашему ключу)"
         "nim|NVIDIA NIM - полный каталог (GET /v1/models)"
-        "groq|Groq - полный каталог моделей (GET /v1/models)"
-        "groq-free|Groq - только бесплатные модели (статический список)"
+        "groq|Groq - полный каталог моделей (paid, GET /v1/models)"
+        "groq-free|Groq - статический список популярных моделей (paid)"
         "openrouter|OpenRouter - полный каталог моделей (GET /v1/models)"
         "openrouter-free|OpenRouter - только бесплатные модели (статический список)"
     )
@@ -223,7 +223,7 @@ invoke_qwen_custom_model_wizard() {
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
         elif [ "$prov_source" = "groq-free" ]; then
-            show_tui_wait_frame "$app_brand" "Groq free (статический список, 6K TPM / 30 RPM)…"
+            show_tui_wait_frame "$app_brand" "Groq (статический список, pay-per-token)…"
             ids=( "llama-3.3-70b-versatile" "llama-3.1-8b-instant" "meta-llama/llama-4-scout-17b-16e-instruct" "qwen/qwen3-32b" "openai/gpt-oss-120b" "deepseek-r1-distill-llama-70b" "deepseek-r1-distill-qwen-32b" )
             key=$(get_qwen_groq_api_key) || true
         elif [ "$prov_source" = "openrouter" ]; then
