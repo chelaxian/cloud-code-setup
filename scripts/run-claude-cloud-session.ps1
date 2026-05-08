@@ -167,6 +167,16 @@ function Test-ClaudeMemWorkerUp {
 
 function Ensure-ClaudeMemWorker {
   if ($SkipClaudeMem) { return }
+
+  # Check if claude-mem is actually installed before attempting anything
+  $claudeMemCmd = Get-Command claude-mem -ErrorAction SilentlyContinue
+  $pluginDir = Join-Path $HOME ".claude\plugins\marketplaces\thedotmack\plugin"
+  $workerScript = Join-Path $pluginDir "scripts\worker-service.cjs"
+  if (-not $claudeMemCmd -and -not (Test-Path -LiteralPath $workerScript)) {
+    Write-Host "claude-mem не установлен — пропуск запуска worker." -ForegroundColor DarkGray
+    return
+  }
+
   if (Test-ClaudeMemWorkerUp) { return }
   Ensure-ClaudeSidecarPath
 
@@ -373,7 +383,12 @@ if ($OpenClaudeMemObserver -ne 0) {
     }
   } catch {}
 }
-Start-Obsidian -Exe $ObsidianExe -Vault $VaultPath
+# Only start Obsidian if it is actually installed
+if (-not (Test-Path -LiteralPath $ObsidianExe)) {
+  Write-Host "Obsidian не установлен — пропуск запуска." -ForegroundColor DarkGray
+} else {
+  Start-Obsidian -Exe $ObsidianExe -Vault $VaultPath
+}
 
 if ($PrepareOnly) {
   Write-Host "Claude (облако): общая подготовка выполнена (settings, claude-mem, Obsidian, PATH npm)." -ForegroundColor Green

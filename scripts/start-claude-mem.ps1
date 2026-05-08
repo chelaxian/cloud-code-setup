@@ -116,17 +116,39 @@ if ($RepairInstall) {
 # Сброс «зависшего» worker.pid: внутренний worker-service сразу exit(0), если считает дубликат - тогда HTTP не поднимается.
 Write-Host "claude-mem: остановка и очистка stale PID…" -ForegroundColor DarkCyan
 
-# Auto-install claude-mem if missing
+# Auto-install claude-mem if missing (non-interactive)
 if (-not (Get-Command claude-mem -ErrorAction SilentlyContinue)) {
   $pluginDir = Join-Path $HOME ".claude\plugins\marketplaces\thedotmack\plugin"
   $workerScript = Join-Path $pluginDir "scripts\worker-service.cjs"
   if (-not (Test-Path -LiteralPath $workerScript)) {
-    Write-Host "claude-mem не установлен. Выполняю установку..." -ForegroundColor Cyan
-    & npx.cmd --yes claude-mem install 2>$null
+    Write-Host "claude-mem не установлен. Выполняю неинтерактивную установку..." -ForegroundColor Cyan
+
+    # Pre-create settings.json for non-interactive install (free OpenRouter model)
+    $cmDataDir = Join-Path $HOME ".claude-mem"
+    if (-not (Test-Path -LiteralPath $cmDataDir)) {
+      New-Item -ItemType Directory -Path $cmDataDir -Force | Out-Null
+    }
+    $cmSettingsFile = Join-Path $cmDataDir "settings.json"
+    if (-not (Test-Path -LiteralPath $cmSettingsFile)) {
+      $existingOrKey = $env:OPENROUTER_API_KEY
+      if ([string]::IsNullOrWhiteSpace($existingOrKey)) {
+        $existingOrKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      }
+      $cmSettings = @{
+        CLAUDE_MEM_PROVIDER       = "openrouter"
+        CLAUDE_MEM_OPENROUTER_MODEL = "xiaomi/mimo-v2-flash:free"
+        CLAUDE_MEM_OPENROUTER_API_KEY = if ($existingOrKey) { $existingOrKey } else { "" }
+        CLAUDE_MEM_MODEL          = "claude-haiku-4-5-20251001"
+        CLAUDE_MEM_CLAUDE_AUTH_METHOD = "subscription"
+        CLAUDE_MEM_WORKER_PORT    = "37777"
+      } | ConvertTo-Json -Depth 3
+      [System.IO.File]::WriteAllText($cmSettingsFile, $cmSettings, (New-Object System.Text.UTF8Encoding($false)))
+    }
+
+    & npx.cmd --yes claude-mem install --non-interactive --provider openrouter 2>$null
     if ($LASTEXITCODE -ne 0) {
-      # Try npm global install as fallback
       & npm.cmd install -g claude-mem@latest 2>$null
-      & npx.cmd --yes claude-mem install 2>$null
+      & npx.cmd --yes claude-mem install --non-interactive --provider openrouter 2>$null
     }
     if (-not (Test-Path -LiteralPath $workerScript)) {
       Write-Host "claude-mem: не удалось установить. Пропуск." -ForegroundColor Red
