@@ -527,9 +527,9 @@ if ($installClaude) {
     if ($claudeMemCmd) {
         Write-Status "  Инициализация claude-mem (non-interactive)..." "Cyan"
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        & claude-mem install --non-interactive --provider openrouter 2>$null
+        & claude-mem install --non-interactive --provider claude 2>$null
         if ($LASTEXITCODE -ne 0) {
-            & npx.cmd --yes claude-mem install --non-interactive --provider openrouter 2>$null
+            & npx.cmd --yes claude-mem install --non-interactive --provider claude 2>$null
         }
         $ErrorActionPreference = $prevEAP
         Write-Status "  [OK] claude-mem установлен и инициализирован" "Green"
@@ -538,7 +538,7 @@ if ($installClaude) {
         # npm didn't create a binary — try npx to install and init
         Write-Status "  Установка claude-mem через npx (non-interactive)..." "Cyan"
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        & npx.cmd --yes claude-mem install --non-interactive --provider openrouter 2>$null
+        & npx.cmd --yes claude-mem install --non-interactive --provider claude 2>$null
         $ErrorActionPreference = $prevEAP
         $claudeMemCmd = Get-Command claude-mem -ErrorAction SilentlyContinue
         if ($claudeMemCmd) {
@@ -554,7 +554,7 @@ if ($installClaude) {
     if (-not (Test-Path -LiteralPath $pluginDir)) {
         Write-Status "  Создание директории плагина claude-mem..." "Cyan"
         $prevEAP = $ErrorActionPreference; $ErrorActionPreference = "Continue"
-        & npx.cmd --yes claude-mem install --non-interactive --provider openrouter 2>$null
+        & npx.cmd --yes claude-mem install --non-interactive --provider claude 2>$null
         $ErrorActionPreference = $prevEAP
     }
 

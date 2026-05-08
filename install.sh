@@ -173,7 +173,7 @@ if $DO_UPDATE; then
     if [ -d "$FCC_DIR" ]; then
         echo ""
         echo -e "${CYAN}Обновление free-claude-code proxy…${RESET}"
-        (cd "$FCC_DIR" && git pull origin main 2>/dev/null) || true
+        (cd "$FCC_DIR" && git pull origin main >/dev/null 2>&1) || true
         if command -v uv &>/dev/null; then
             (cd "$FCC_DIR" && uv sync &>/dev/null) || true
         fi
@@ -325,9 +325,59 @@ if $INSTALL_CLAUDE; then
             warn "Не удалось клонировать free-claude-code. NIM/OpenRouter будут недоступны."
         fi
     else
-        (cd "$FCC_DIR" && git pull origin main 2>/dev/null) || true
+        (cd "$FCC_DIR" && git pull origin main >/dev/null 2>&1) || true
         ok "free-claude-code: обновлён"
         (cd "$FCC_DIR" && uv sync &>/dev/null) || true
+    fi
+
+    # claude-mem — non-interactive setup (uses current Claude session for compression)
+    if [ -z "$INSTALL_CLAUDE_MEM" ]; then
+        # Ask user if they want claude-mem
+        echo ""
+        read -p "Установить claude-mem (memory plugin для Claude Code)? [Y/n]: " cm_answer < /dev/tty
+        case "${cm_answer:-Y}" in
+            [YyДд]*) INSTALL_CLAUDE_MEM=true ;;
+            *) INSTALL_CLAUDE_MEM=false ;;
+        esac
+    fi
+
+    if [ "$INSTALL_CLAUDE_MEM" = "true" ]; then
+        echo -e "${CYAN}Установка claude-mem…${RESET}"
+        npm install -g claude-mem@latest 2>/dev/null || true
+
+        # Pre-create settings.json with provider=claude (uses current ANTHROPIC_AUTH_TOKEN)
+        CM_DIR="$HOME/.claude-mem"
+        mkdir -p "$CM_DIR" 2>/dev/null
+        CM_SETTINGS="$CM_DIR/settings.json"
+        if [ ! -f "$CM_SETTINGS" ]; then
+            cat > "$CM_SETTINGS" << 'CMEOF'
+{
+  "CLAUDE_MEM_PROVIDER": "claude",
+  "CLAUDE_MEM_CLAUDE_AUTH_METHOD": "api",
+  "CLAUDE_MEM_MODEL": "claude-sonnet-4-6",
+  "CLAUDE_MEM_TIER_ROUTING_ENABLED": "true",
+  "CLAUDE_MEM_TIER_SIMPLE_MODEL": "haiku",
+  "CLAUDE_MEM_WORKER_PORT": "37777",
+  "CLAUDE_MEM_WORKER_HOST": "127.0.0.1",
+  "CLAUDE_MEM_MODE": "code"
+}
+CMEOF
+            ok "claude-mem: settings созданы (provider=claude)"
+        else
+            ok "claude-mem: settings уже существуют"
+        fi
+
+        # Run install non-interactively by piping answers
+        if command -v claude-mem &>/dev/null; then
+            # Try with flags first
+            claude-mem install --non-interactive --provider claude 2>/dev/null || {
+                # Fallback: pipe default answers
+                printf 'claude-code\nWorker\nclaude\napi\nhaiku\n' | npx --yes claude-mem install 2>/dev/null || true
+            }
+        else
+            printf 'claude-code\nWorker\nclaude\napi\nhaiku\n' | npx --yes claude-mem install 2>/dev/null || true
+        fi
+        ok "claude-mem установлен"
     fi
 fi
 
@@ -349,7 +399,7 @@ read_api_key_stars() {
     local key=""
     local char=""
     printf "%s" "$prompt"
-    while IFS= read -rsn1 char; do
+    while IFS= read -rsn1 char < /dev/tty; do
         if [[ $char == $'\0' ]]; then
             continue
         elif [[ $char == $'\177' || $char == $'\b' ]]; then
