@@ -246,7 +246,7 @@ function Read-SecretText([string]$Prompt) {
   Write-Host -NoNewline $Prompt
   $key = ""
   while ($true) {
-    $cki = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown,IncludeKeyUp")
+    $cki = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     if ($cki.Key -eq "Enter") {
       Write-Host ""
       break
@@ -258,7 +258,7 @@ function Read-SecretText([string]$Prompt) {
     } elseif ($cki.Key -eq "Escape") {
       Write-Host ""
       return ""
-    } elseif (-not [string]::IsNullOrEmpty($cki.Character)) {
+    } elseif ($cki.Character -and [int]$cki.Character -ge 32) {
       $key += $cki.Character
       Write-Host -NoNewline "*"
     }
