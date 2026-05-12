@@ -249,7 +249,7 @@ function Get-GroqBundledFreeModelIds {
 function Get-OpenRouterBundledFreeModelIds {
   $raw = @(
     "openrouter/free"
-    "tencent/hy3-preview:free"
+    "nvidia/nemotron-3-super-120b-a12b:free"
     "nvidia/nemotron-3-super:free"
     "inclusionai/ling-2.6-1t:free"
     "openai/gpt-oss-120b:free"

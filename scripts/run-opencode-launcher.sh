@@ -312,7 +312,7 @@ invoke_opencode_profile() {
                 return 0
             fi
             local config_path
-            config_path=$(write_opencode_config "openrouter" "tencent/hy3-preview:free" "https://openrouter.ai/api/v1" "$api_key" 8192 262144)
+            config_path=$(write_opencode_config "openrouter" "nvidia/nemotron-3-super-120b-a12b:free" "https://openrouter.ai/api/v1" "$api_key" 8192 262144)
             export OPENCODE_CONFIG="$config_path"
             echo -e "${CYAN}Запуск OpenCode (OpenRouter Tencent Hy3)…${RESET}"
             "$opencode_exe"

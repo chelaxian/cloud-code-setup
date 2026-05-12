@@ -194,7 +194,7 @@ function Invoke-ClaudeCloudProfile {
       return
     }
     "claude-openrouter-hy3" {
-      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "tencent/hy3-preview:free" -ClaudeTools default `
+      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "nvidia/nemotron-3-super-120b-a12b:free" -ClaudeTools default `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }
