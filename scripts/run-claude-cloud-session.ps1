@@ -369,8 +369,8 @@ if ($Provider -eq "zai") {
     Write-Host "Получить ключ: https://console.z.ai/" -ForegroundColor DarkCyan
     $ZaiApiKey = Read-SecretText "Введите Z.AI API key"
   }
-  $env:ANTHROPIC_AUTH_TOKEN = $ZaiApiKey
   $env:ANTHROPIC_API_KEY = $ZaiApiKey
+  Remove-Item Env:ANTHROPIC_AUTH_TOKEN -ErrorAction SilentlyContinue
   $env:ANTHROPIC_BASE_URL = "https://api.z.ai/api/anthropic"
   $env:API_TIMEOUT_MS = "3000000"
   $zModel = "glm-4.7"
@@ -419,7 +419,7 @@ if ($Provider -in @("nim", "nim-qwen")) {
   }
   Ensure-FreeClaudeCodeProxy -Dir $FreeClaudeCodeDir -Port $proxyPortResolved -NimKey $NvidiaNimApiKey -Model $nimModelResolved -AuthToken $ProxyAuthToken
   $env:ANTHROPIC_AUTH_TOKEN = $ProxyAuthToken
-  $env:ANTHROPIC_API_KEY = $ProxyAuthToken
+  Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
   $env:ANTHROPIC_BASE_URL = ("http://127.0.0.1:{0}" -f $proxyPortResolved)
   $env:API_TIMEOUT_MS = "3000000"
 
@@ -455,7 +455,7 @@ if ($Provider -eq "openrouter") {
   Ensure-FreeClaudeCodeProxy -Dir $FreeClaudeCodeDir -Port $orPort -NimKey $orKey -Model $orModel -AuthToken $ProxyAuthToken -ExtraEnv @{ OPENROUTER_API_KEY = $orKey }
   $env:OPENROUTER_API_KEY = $orKey
   $env:ANTHROPIC_AUTH_TOKEN = $ProxyAuthToken
-  $env:ANTHROPIC_API_KEY = $ProxyAuthToken
+  Remove-Item Env:ANTHROPIC_API_KEY -ErrorAction SilentlyContinue
   $env:ANTHROPIC_BASE_URL = ("http://127.0.0.1:{0}" -f $orPort)
   $env:API_TIMEOUT_MS = "3000000"
 

@@ -25,7 +25,8 @@ PROFILES=(
     "claude-zai-flash47|Z.AI - GLM-4.7-Flash (free, tool calling)"
     "claude-zai-flash45|Z.AI - GLM-4.5-Flash (free, tool calling)"
     "claude-nim-qwen|NVIDIA NIM - Qwen3.5-122B-A10B (tool calling)"
-    "claude-openrouter-hy3|OpenRouter - Tencent Hy3 (free, tool calling)"
+    "claude-openrouter-deepseek-v4-flash|OpenRouter - DeepSeek V4 Flash (free, tool calling)"
+    "claude-openrouter-qwen3-coder|OpenRouter - Qwen3 Coder (free, tool calling)"
     "claude-openrouter-nemotron|OpenRouter - Nemotron 3 Super 120B (free, tool calling)"
     "claude-openrouter-laguna|OpenRouter - Poolside Laguna M.1 (free, tool calling, coding)"
     "custom-model|Другая модель… → выбор провайдера и модели"
@@ -61,7 +62,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
 
     case "$profile_id" in
-        "claude-zai"|"claude-zai-glm51"|"claude-zai-flash47"|"claude-zai-flash45"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-hy3"|"claude-openrouter-nemotron"|"claude-openrouter-laguna"|"custom-claude-zai"|"custom-claude-zai-general"|"custom-claude-nim"|"custom-claude-openrouter")
+        "claude-zai"|"claude-zai-glm51"|"claude-zai-flash47"|"claude-zai-flash45"|"claude-nim"|"claude-nim-qwen"|"claude-openrouter-hy3"|"claude-openrouter-deepseek-v4-flash"|"claude-openrouter-qwen3-coder"|"claude-openrouter-nemotron"|"claude-openrouter-laguna"|"custom-claude-zai"|"custom-claude-zai-general"|"custom-claude-nim"|"custom-claude-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -96,14 +97,23 @@ ensure_fcc_proxy() {
     local model="$2"
     local port="${3:-8082}"
 
-    # Check if proxy already running on this port AND responding to HTTP
+    # Check if proxy already running on this port AND responding to HTTP.
+    # Restart when .env points at another model; otherwise a stale proxy can keep
+    # serving a deprecated backend after the launcher profile changed.
     if (ss -tlnp 2>/dev/null | grep -q ":${port} " || nc -z 127.0.0.1 "$port" 2>/dev/null); then
+        local env_file="$FCC_DIR/.env"
+        if [ -f "$env_file" ] && ! grep -qx "MODEL=\"${model}\"" "$env_file"; then
+            printf "${YELLOW}Proxy на порту ${port} запущен с другой моделью. Перезапуск...${RESET}\n" >&3
+            fuser -k "${port}/tcp" 2>/dev/null || true
+            sleep 1
+        else
         local existing_code
         existing_code=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${port}/v1/models" 2>/dev/null) || true
         if [ -n "$existing_code" ] && [ "$existing_code" != "000" ]; then
             printf "${GREEN}  [OK] Proxy уже работает на порту ${port} (HTTP ${existing_code})${RESET}\n" >&3
             echo "$port"
             return 0
+        fi
         fi
         # Port is open but not HTTP — kill whatever is on it and restart
         printf "${YELLOW}Порт ${port} занят, но не отвечает на HTTP. Перезапуск...${RESET}\n" >&3
@@ -263,8 +273,8 @@ invoke_claude_cloud_profile() {
         claude-zai*|custom-claude-zai*|custom-claude-zai-general)
             local key="${ZAI_API_KEY:-}"
             if [ -z "$key" ] || [ "$key" = "__SET_ME__" ]; then key="${OPENAI_API_KEY:-}"; fi
-            export ANTHROPIC_AUTH_TOKEN="$key"
             export ANTHROPIC_API_KEY="$key"
+            unset ANTHROPIC_AUTH_TOKEN
             export ANTHROPIC_BASE_URL="https://api.z.ai/api/anthropic"
             export ANTHROPIC_DEFAULT_OPUS_MODEL="$model"
             export ANTHROPIC_DEFAULT_SONNET_MODEL="$model"
@@ -282,7 +292,9 @@ invoke_claude_cloud_profile() {
                     ;;
             esac
             local proxy_port
-            proxy_port=$(ensure_fcc_proxy "nvidia_nim" "$fcc_model" "8082") || {
+            local nim_proxy_port="8082"
+            if [ "$profile_id" = "claude-nim-qwen" ]; then nim_proxy_port="8083"; fi
+            proxy_port=$(ensure_fcc_proxy "nvidia_nim" "$fcc_model" "$nim_proxy_port") || {
                 printf "${RED}Не удалось запустить free-claude-code proxy.${RESET}\n" >&3
                 return 1
             }
@@ -295,7 +307,7 @@ invoke_claude_cloud_profile() {
                 return 1
             fi
             export ANTHROPIC_AUTH_TOKEN="freecc"
-            export ANTHROPIC_API_KEY="freecc"
+            unset ANTHROPIC_API_KEY
             export ANTHROPIC_BASE_URL="http://127.0.0.1:${proxy_port}"
             export ANTHROPIC_DEFAULT_OPUS_MODEL="$fcc_model"
             export ANTHROPIC_DEFAULT_SONNET_MODEL="$fcc_model"
@@ -303,10 +315,12 @@ invoke_claude_cloud_profile() {
             export API_TIMEOUT_MS="3000000"
             ;;
         claude-openrouter*|custom-claude-openrouter*)
-            # Keep main menu to 3 working free models; custom still supported.
-            local fcc_model="open_router/tencent/hy3-preview:free"
+            # Keep main menu to working free tool-calling models; custom still supported.
+            local fcc_model="open_router/deepseek/deepseek-v4-flash:free"
             case "$profile_id" in
-                "claude-openrouter-hy3") fcc_model="open_router/tencent/hy3-preview:free" ;;
+                "claude-openrouter-hy3") fcc_model="open_router/deepseek/deepseek-v4-flash:free" ;;
+                "claude-openrouter-deepseek-v4-flash") fcc_model="open_router/deepseek/deepseek-v4-flash:free" ;;
+                "claude-openrouter-qwen3-coder") fcc_model="open_router/qwen/qwen3-coder:free" ;;
                 "claude-openrouter-nemotron") fcc_model="open_router/nvidia/nemotron-3-super-120b-a12b:free" ;;
                 "claude-openrouter-laguna") fcc_model="open_router/poolside/laguna-m.1:free" ;;
                 "custom-claude-openrouter")
@@ -329,7 +343,7 @@ invoke_claude_cloud_profile() {
                 return 1
             fi
             export ANTHROPIC_AUTH_TOKEN="freecc"
-            export ANTHROPIC_API_KEY="freecc"
+            unset ANTHROPIC_API_KEY
             export ANTHROPIC_BASE_URL="http://127.0.0.1:${proxy_port}"
             export ANTHROPIC_DEFAULT_OPUS_MODEL="$fcc_model"
             export ANTHROPIC_DEFAULT_SONNET_MODEL="$fcc_model"
@@ -441,11 +455,9 @@ invoke_claude_custom_model_wizard() {
     local app_brand="$1"
 
     local prov_items=(
-        "zai|Z.AI - Coding endpoint (список моделей по вашему ключу)"
-        "zai-general|Z.AI - General endpoint (все модели, статический список)"
+        "zai|Z.AI - Coding / Anthropic (GET /models по вашему ключу)"
         "nim|NVIDIA NIM - полный каталог (GET /v1/models)"
         "openrouter|OpenRouter - полный каталог моделей (GET /v1/models)"
-        "openrouter-free|OpenRouter - только бесплатные модели (статический список)"
     )
 
     while true; do
@@ -481,20 +493,6 @@ invoke_claude_custom_model_wizard() {
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
 
-            if [ ${#ids[@]} -eq 0 ]; then
-                ids=("glm-4.7" "glm-4.7-flash" "glm-4.7-flashx" "glm-4.6" "glm-4.5" "glm-5" "glm-5-turbo" "glm-5.1")
-            fi
-        elif [ "$prov_source" = "zai-general" ]; then
-            show_tui_wait_frame "$app_brand" "Z.AI General (статический список)…"
-            key=$(get_claude_zai_api_key) || true
-            ids=(
-                "glm-4.7" "glm-4.7-flash" "glm-4.7-flashx"
-                "glm-4.6" "glm-4.6v" "glm-4.6v-flashx" "glm-4.6v-flash"
-                "glm-4.5" "glm-4.5-x" "glm-4.5-air" "glm-4.5-airx" "glm-4.5-flash" "glm-4.5v"
-                "glm-4-32b-0414-128k"
-                "glm-5" "glm-5-turbo" "glm-5.1" "glm-5v-turbo"
-                "glm-ocr"
-            )
         elif [ "$prov_source" = "nim" ]; then
             show_tui_wait_frame "$app_brand" "Загрузка каталога NVIDIA NIM…"
             key=$(get_claude_nim_api_key) || true
@@ -515,9 +513,6 @@ invoke_claude_custom_model_wizard() {
             if [ -n "$response" ]; then
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
-        elif [ "$prov_source" = "openrouter-free" ]; then
-            ids=( "openrouter/free" "tencent/hy3-preview:free" "nvidia/nemotron-3-super:free" "inclusionai/ling-2.6-1t:free" "openai/gpt-oss-120b:free" "poolside/laguna-m.1:free" "openrouter/owl-alpha:free" "z-ai/glm-4.5-air:free" "minimax/minimax-m2.5:free" "openai/gpt-oss-20b:free" "meta-llama/llama-4-scout:free" "qwen/qwen3-235b-a22b:free" "google/gemma-4-31b:free" "meta-llama/llama-3.3-70b-instruct:free" "mistralai/mistral-small-3.1-24b-instruct:free" )
-            key=$(get_claude_openrouter_api_key) || true
         fi
 
         if [ ${#ids[@]} -eq 0 ]; then
@@ -540,9 +535,9 @@ invoke_claude_custom_model_wizard() {
 
         local model_id="${ids[$((model_choice-1))]}"
         local prov="nim"
-        if [ "$prov_source" = "zai" ] || [ "$prov_source" = "zai-general" ]; then
+        if [ "$prov_source" = "zai" ]; then
             prov="zai"
-        elif [ "$prov_source" = "openrouter" ] || [ "$prov_source" = "openrouter-free" ]; then
+        elif [ "$prov_source" = "openrouter" ]; then
             prov="openrouter"
         fi
 

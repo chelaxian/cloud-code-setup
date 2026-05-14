@@ -53,8 +53,12 @@ $script:Profiles = @(
     Label = "NVIDIA NIM - Qwen3.5-122B-A10B (tool calling)"
   }
   @{
-    Id    = "openrouter-hy3"
-    Label = "OpenRouter - Tencent Hy3 (free, tool calling)"
+    Id    = "openrouter-deepseek-v4-flash"
+    Label = "OpenRouter - DeepSeek V4 Flash (free, tool calling)"
+  }
+  @{
+    Id    = "openrouter-qwen3-coder"
+    Label = "OpenRouter - Qwen3 Coder (free, tool calling)"
   }
   @{
     Id    = "openrouter-nemotron"
@@ -106,7 +110,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "nim-glm", "nim-qwen", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-opencode-zai", "custom-opencode-nim", "custom-opencode-groq", "custom-opencode-openrouter")) { return $id }
+  if ($id -in @("zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "nim-glm", "nim-qwen", "openrouter-hy3", "openrouter-deepseek-v4-flash", "openrouter-qwen3-coder", "openrouter-nemotron", "openrouter-laguna", "custom-opencode-zai", "custom-opencode-nim", "custom-opencode-groq", "custom-opencode-openrouter")) { return $id }
   return $null
 }
 
@@ -398,9 +402,33 @@ function Invoke-OpenCodeProfile {
       $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
       if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
       if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = Resolve-ApiKeyOrPrompt -CurrentKey $apiKey -ProviderName "OpenRouter" -HelpUrl "https://openrouter.ai/settings/keys" }
-      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "nvidia/nemotron-3-super-120b-a12b:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 262144
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "deepseek/deepseek-v4-flash:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 1048576
       $env:OPENCODE_CONFIG = $configPath
-      Write-Host "Запуск OpenCode (OpenRouter Tencent Hy3)…" -ForegroundColor Cyan
+      Write-Host "Запуск OpenCode (OpenRouter DeepSeek V4 Flash)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "openrouter-deepseek-v4-flash" {
+      $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey)) {
+        $apiKey = Resolve-ApiKeyOrPrompt -CurrentKey $apiKey -ProviderName "OpenRouter" -HelpUrl "https://openrouter.ai/settings/keys"
+      }
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "deepseek/deepseek-v4-flash:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 1048576
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (OpenRouter DeepSeek V4 Flash)…" -ForegroundColor Cyan
+      & $opencodeExe
+      return
+    }
+    "openrouter-qwen3-coder" {
+      $apiKey = [Environment]::GetEnvironmentVariable("OPENROUTER_API_KEY", "User")
+      if ([string]::IsNullOrWhiteSpace($apiKey)) { $apiKey = $env:OPENROUTER_API_KEY }
+      if ([string]::IsNullOrWhiteSpace($apiKey)) {
+        $apiKey = Resolve-ApiKeyOrPrompt -CurrentKey $apiKey -ProviderName "OpenRouter" -HelpUrl "https://openrouter.ai/settings/keys"
+      }
+      $configPath = Write-OpenCodeConfig -Provider "openrouter" -Model "qwen/qwen3-coder:free" -BaseURL "https://openrouter.ai/api/v1" -ApiKey $apiKey -MaxTokens 8192 -ContextLength 262000
+      $env:OPENCODE_CONFIG = $configPath
+      Write-Host "Запуск OpenCode (OpenRouter Qwen3 Coder)…" -ForegroundColor Cyan
       & $opencodeExe
       return
     }

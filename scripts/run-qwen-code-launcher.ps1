@@ -83,8 +83,12 @@ $script:Profiles = @(
     Label       = "Z.AI - GLM-4.5-Flash (free, tool calling)"
   }
   @{
-    Id          = "openrouter-hy3"
-    Label       = "OpenRouter - Tencent Hy3 (free, tool calling)"
+    Id          = "openrouter-deepseek-v4-flash"
+    Label       = "OpenRouter - DeepSeek V4 Flash (free, tool calling)"
+  }
+  @{
+    Id          = "openrouter-qwen3-coder"
+    Label       = "OpenRouter - Qwen3 Coder (free, tool calling)"
   }
   @{
     Id          = "openrouter-nemotron"
@@ -136,7 +140,7 @@ function Save-LauncherState {
 function Resolve-ProfileFromState($state) {
   if (-not $state -or [string]::IsNullOrWhiteSpace($state.profileId)) { return $null }
   $id = [string]$state.profileId
-  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "openrouter-hy3", "openrouter-nemotron", "openrouter-laguna", "custom-qwen-zai", "custom-qwen-zai-general", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
+  if ($id -in @("nim-glm", "nim-qwen", "zai-glm", "zai-glm51", "zai-flash47", "zai-flash45", "openrouter-hy3", "openrouter-deepseek-v4-flash", "openrouter-qwen3-coder", "openrouter-nemotron", "openrouter-laguna", "custom-qwen-zai", "custom-qwen-zai-general", "custom-qwen-nim", "custom-qwen-groq", "custom-qwen-openrouter")) { return $id }
   return $null
 }
 
@@ -169,7 +173,15 @@ function Invoke-QwenProfile {
       return
     }
     "openrouter-hy3" {
-      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "nvidia/nemotron-3-super-120b-a12b:free"
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "deepseek/deepseek-v4-flash:free"
+      return
+    }
+    "openrouter-deepseek-v4-flash" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "deepseek/deepseek-v4-flash:free"
+      return
+    }
+    "openrouter-qwen3-coder" {
+      & (Join-Path $PSScriptRoot "run-qwen-code-dynamic.ps1") -Provider openrouter -ModelId "qwen/qwen3-coder:free"
       return
     }
     "openrouter-nemotron" {

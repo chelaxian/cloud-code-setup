@@ -86,8 +86,12 @@ $script:Profiles = @(
     Label = "NVIDIA NIM - Qwen3.5-122B-A10B (tool calling)"
   }
   @{
-    Id    = "claude-openrouter-hy3"
-    Label = "OpenRouter - Tencent Hy3 (free, tool calling)"
+    Id    = "claude-openrouter-deepseek-v4-flash"
+    Label = "OpenRouter - DeepSeek V4 Flash (free, tool calling)"
+  }
+  @{
+    Id    = "claude-openrouter-qwen3-coder"
+    Label = "OpenRouter - Qwen3 Coder (free, tool calling)"
   }
   @{
     Id    = "claude-openrouter-nemotron"
@@ -140,7 +144,7 @@ function Resolve-ProfileFromState($state) {
   $id = [string]$state.profileId
   if ($id -in @(
       "claude-zai", "claude-zai-glm51", "claude-zai-flash47", "claude-zai-flash45", "claude-nim", "claude-nim-qwen",
-      "claude-openrouter-hy3", "claude-openrouter-nemotron", "claude-openrouter-laguna",
+      "claude-openrouter-hy3", "claude-openrouter-deepseek-v4-flash", "claude-openrouter-qwen3-coder", "claude-openrouter-nemotron", "claude-openrouter-laguna",
       "custom-claude-zai", "custom-claude-nim", "custom-claude-openrouter"
     )) { return $id }
   return $null
@@ -190,7 +194,17 @@ function Invoke-ClaudeCloudProfile {
       return
     }
     "claude-openrouter-hy3" {
-      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "nvidia/nemotron-3-super-120b-a12b:free" -ClaudeTools default `
+      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "deepseek/deepseek-v4-flash:free" -ClaudeTools default `
+        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
+      return
+    }
+    "claude-openrouter-deepseek-v4-flash" {
+      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "deepseek/deepseek-v4-flash:free" -ClaudeTools default `
+        -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
+      return
+    }
+    "claude-openrouter-qwen3-coder" {
+      & $SessionScript -Provider openrouter -ZaiAnthropicModelId "qwen/qwen3-coder:free" -ClaudeTools default `
         -ClaudeMemMaxWaitSec 25 -OpenClaudeMemObserver $OpenClaudeMemObserver -SkipCommonPreamble
       return
     }

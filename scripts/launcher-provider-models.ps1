@@ -167,13 +167,7 @@ function Get-ZaiCodingModelIdsFromApi {
       continue
     }
   }
-  return @(
-    "glm-4.7", "glm-4.7-flash", "glm-4.7-flashx",
-    "glm-4.6", "glm-4.6v", "glm-4.6v-flashx", "glm-4.6v-flash",
-    "glm-4.5", "glm-4.5-x", "glm-4.5-air", "glm-4.5-airx", "glm-4.5-flash", "glm-4.5v",
-    "glm-4-32b-0414-128k",
-    "glm-5", "glm-5-turbo", "glm-5.1", "glm-5v-turbo"
-  )
+  return @()
 }
 
 function Get-ZaiGeneralModelIds {
@@ -202,11 +196,8 @@ function Get-GroqModelIdsFromApi {
     if ($resp -and $resp.data) {
       return @($resp.data | Sort-Object -Property id | ForEach-Object { $_.id })
     }
-  } catch {
-    # Groq API может быть заблокирован в РФ (403) - fallback на статический список
-    Write-Host "Groq API недоступен (возможно заблокирован в РФ). Используем встроенный каталог." -ForegroundColor Yellow
-  }
-  return @(Get-GroqBundledFreeModelIds)
+  } catch {}
+  return @()
 }
 
 function Get-OpenRouterModelIdsFromApi {

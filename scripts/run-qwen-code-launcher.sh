@@ -29,7 +29,8 @@ PROFILES=(
     "zai-glm51|Z.AI - GLM-5.1 (paid, tool calling)"
     "zai-flash47|Z.AI - GLM-4.7-Flash (free, tool calling)"
     "zai-flash45|Z.AI - GLM-4.5-Flash (free, tool calling)"
-    "openrouter-hy3|OpenRouter - Tencent Hy3 (free, tool calling)"
+    "openrouter-deepseek-v4-flash|OpenRouter - DeepSeek V4 Flash (free, tool calling)"
+    "openrouter-qwen3-coder|OpenRouter - Qwen3 Coder (free, tool calling)"
     "openrouter-nemotron|OpenRouter - Nemotron 3 Super 120B (free, tool calling)"
     "openrouter-laguna|OpenRouter - Poolside Laguna M.1 (free, tool calling, coding)"
     "custom-model|Другая модель… → выбор провайдера и модели"
@@ -65,7 +66,7 @@ resolve_profile_from_state() {
     local profile_id=$(echo "$state" | grep -o '"profileId":"[^"]*"' | cut -d'"' -f4)
     
     case "$profile_id" in
-        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"openrouter-hy3"|"openrouter-nemotron"|"openrouter-laguna"|"custom-qwen-zai"|"custom-qwen-zai-general"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
+        "nim-glm"|"nim-qwen"|"zai-glm"|"zai-glm51"|"zai-flash47"|"zai-flash45"|"openrouter-hy3"|"openrouter-deepseek-v4-flash"|"openrouter-qwen3-coder"|"openrouter-nemotron"|"openrouter-laguna"|"custom-qwen-zai"|"custom-qwen-zai-general"|"custom-qwen-nim"|"custom-qwen-groq"|"custom-qwen-openrouter")
             echo "$profile_id"
             return 0
             ;;
@@ -168,9 +169,7 @@ invoke_qwen_custom_model_wizard() {
         "zai|Z.AI - Coding / Anthropic (список моделей по вашему ключу)"
         "nim|NVIDIA NIM - полный каталог (GET /v1/models)"
         "groq|Groq - полный каталог моделей (paid, GET /v1/models)"
-        "groq-free|Groq - статический список популярных моделей (paid)"
         "openrouter|OpenRouter - полный каталог моделей (GET /v1/models)"
-        "openrouter-free|OpenRouter - только бесплатные модели (статический список)"
     )
 
     while true; do
@@ -206,9 +205,6 @@ invoke_qwen_custom_model_wizard() {
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
 
-            if [ ${#ids[@]} -eq 0 ]; then
-                ids=("glm-4.7" "glm-4.7-flash" "glm-4.7-flashx" "glm-4.6" "glm-4.5" "glm-5" "glm-5-turbo" "glm-5.1")
-            fi
         elif [ "$prov_source" = "nim" ]; then
             show_tui_wait_frame "$app_brand" "Загрузка каталога NVIDIA NIM…"
             key=$(get_qwen_nim_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
@@ -229,10 +225,6 @@ invoke_qwen_custom_model_wizard() {
             if [ -n "$response" ]; then
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
-        elif [ "$prov_source" = "groq-free" ]; then
-            show_tui_wait_frame "$app_brand" "Groq (статический список, pay-per-token)…"
-            ids=( "llama-3.3-70b-versatile" "llama-3.1-8b-instant" "meta-llama/llama-4-scout-17b-16e-instruct" "qwen/qwen3-32b" "openai/gpt-oss-120b" "deepseek-r1-distill-llama-70b" "deepseek-r1-distill-qwen-32b" )
-            key=$(get_qwen_groq_api_key) || true
         elif [ "$prov_source" = "openrouter" ]; then
             show_tui_wait_frame "$app_brand" "Загрузка каталога OpenRouter…"
             key=$(get_qwen_openrouter_api_key) || { echo -e "${RED}Не удалось получить API ключ${RESET}"; read -p "Нажмите Enter..."; return 1; }
@@ -243,9 +235,6 @@ invoke_qwen_custom_model_wizard() {
             if [ -n "$response" ]; then
                 ids=($(echo "$response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4 | sort -u))
             fi
-        elif [ "$prov_source" = "openrouter-free" ]; then
-            ids=( "openrouter/free" "tencent/hy3-preview:free" "nvidia/nemotron-3-super:free" "inclusionai/ling-2.6-1t:free" "openai/gpt-oss-120b:free" "poolside/laguna-m.1:free" "openrouter/owl-alpha:free" "z-ai/glm-4.5-air:free" "minimax/minimax-m2.5:free" "openai/gpt-oss-20b:free" "meta-llama/llama-4-scout:free" "qwen/qwen3-235b-a22b:free" "google/gemma-4-31b:free" "meta-llama/llama-3.3-70b-instruct:free" "mistralai/mistral-small-3.1-24b-instruct:free" )
-            key=$(get_qwen_openrouter_api_key) || true
         fi
 
         if [ ${#ids[@]} -eq 0 ]; then
@@ -270,9 +259,9 @@ invoke_qwen_custom_model_wizard() {
         local prov="nim"
         if [ "$prov_source" = "zai" ]; then
             prov="zai"
-        elif [ "$prov_source" = "groq" ] || [ "$prov_source" = "groq-free" ]; then
+        elif [ "$prov_source" = "groq" ]; then
             prov="groq"
-        elif [ "$prov_source" = "openrouter" ] || [ "$prov_source" = "openrouter-free" ]; then
+        elif [ "$prov_source" = "openrouter" ]; then
             prov="openrouter"
         fi
 
@@ -322,8 +311,11 @@ invoke_qwen_profile() {
         "zai-flash45")
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider zai -ModelId "glm-4.5-flash"
             ;;
-        "openrouter-hy3")
-            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "tencent/hy3-preview:free"
+        "openrouter-deepseek-v4-flash")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "deepseek/deepseek-v4-flash:free"
+            ;;
+        "openrouter-qwen3-coder")
+            bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "qwen/qwen3-coder:free"
             ;;
         "openrouter-nemotron")
             bash "$SCRIPT_DIR/run-qwen-code-dynamic.sh" -Provider openrouter -ModelId "nvidia/nemotron-3-super-120b-a12b:free"

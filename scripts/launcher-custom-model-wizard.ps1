@@ -1,6 +1,6 @@
 ﻿# Dot-source после launcher-tui.ps1 и launcher-provider-models.ps1
 # Возврат: [pscustomobject]@{ Provider = 'zai'|'nim'; ModelId = '...'; ClaudeNimModel = 'nvidia_nim/...' }
-# NIM в мастере: полный API, пересечение с каталогом free/preview, или только встроенный статический список.
+# Мастер показывает только динамически получаемые списки моделей из endpoint провайдера.
 
 function Read-SecretTextWizard([string]$Prompt) {
   Write-Host -NoNewline $Prompt
@@ -73,15 +73,10 @@ function Invoke-LauncherCustomModelWizard {
 
   $brand = $App
   $provItems = @(
-    [pscustomobject]@{ Id = "zai"; Label = "Z.AI - Coding endpoint (список моделей по вашему ключу)" }
-    [pscustomobject]@{ Id = "zai-general"; Label = "Z.AI - General endpoint (все модели, статический список)" }
-    [pscustomobject]@{ Id = "nim"; Label = "NVIDIA NIM - полный каталог (GET /v1/models, все ID)" }
-    [pscustomobject]@{ Id = "nim-bundled"; Label = "NVIDIA NIM - только free/preview (API ∩ встроенный список ~50)" }
-    [pscustomobject]@{ Id = "nim-free"; Label = "NVIDIA NIM - free/preview (только статический список, без API)" }
+    [pscustomobject]@{ Id = "zai"; Label = "Z.AI - Coding / Anthropic (GET /models по вашему ключу)" }
+    [pscustomobject]@{ Id = "nim"; Label = "NVIDIA NIM - полный каталог (GET /v1/models)" }
     [pscustomobject]@{ Id = "groq"; Label = "Groq - полный каталог моделей (paid, GET /v1/models)" }
-    [pscustomobject]@{ Id = "groq-free"; Label = "Groq - статический список популярных моделей (paid)" }
     [pscustomobject]@{ Id = "openrouter"; Label = "OpenRouter - полный каталог моделей (GET /v1/models)" }
-    [pscustomobject]@{ Id = "openrouter-free"; Label = "OpenRouter - только бесплатные модели (статический список)" }
   )
 
   # Groq не поддерживается для Claude Code (ограничение free-claude-code: nvidia_nim transport)
@@ -107,40 +102,15 @@ function Invoke-LauncherCustomModelWizard {
         $key = Resolve-NimKeyForWizard
         $ids = @(Get-NvidiaNimModelIdsFromApi -ApiKey $key)
       }
-      elseif ($provSource -eq "nim-bundled") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка NIM и фильтр по каталогу free/preview…"
-        $key = Resolve-NimKeyForWizard
-        $ids = @(Get-NvidiaNimModelIdsFromApi -ApiKey $key -FilterToBundledFreeCatalog)
-      }
-      elseif ($provSource -eq "nim-free") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Встроенный каталог free/preview NIM (без GET /v1/models)…"
-        $null = Resolve-NimKeyForWizard
-        $ids = @(Get-NvidiaNimBundledFreeModelIds)
-      }
-      elseif ($provSource -eq "zai-general") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Z.AI General…"
-        $null = Resolve-ZaiKeyForWizard
-        $ids = @(Get-ZaiGeneralModelIds)
-      }
       elseif ($provSource -eq "groq") {
         Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога Groq (paid)…"
         $key = Resolve-GroqKeyForWizard
         $ids = @(Get-GroqModelIdsFromApi -ApiKey $key)
       }
-      elseif ($provSource -eq "groq-free") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Groq (статический список, pay-per-token)…"
-        $null = Resolve-GroqKeyForWizard
-        $ids = @(Get-GroqBundledFreeModelIds)
-      }
       elseif ($provSource -eq "openrouter") {
         Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка каталога OpenRouter…"
         $key = Resolve-OpenRouterKeyForWizard
         $ids = @(Get-OpenRouterModelIdsFromApi -ApiKey $key)
-      }
-      elseif ($provSource -eq "openrouter-free") {
-        Show-TuiWaitFrame -AppBrand $brand -Message "Загрузка бесплатных моделей OpenRouter…"
-        $null = Resolve-OpenRouterKeyForWizard
-        $ids = @(Get-OpenRouterBundledFreeModelIds)
       }
       else {
         throw ("Неизвестный провайдер: {0}" -f $provSource)
@@ -153,27 +123,18 @@ function Invoke-LauncherCustomModelWizard {
     }
 
     if ($ids.Count -eq 0) {
-      if ($provSource -eq "nim-bundled") {
-        Write-Host "После фильтра free/preview список пуст. Проверьте NVIDIA_NIM_API_KEY или обновите Get-NvidiaNimBundledFreeModelIds в launcher-provider-models.ps1." -ForegroundColor Red
-      } else {
-        Write-Host "Провайдер вернул пустой список моделей." -ForegroundColor Red
-      }
+      Write-Host "Провайдер вернул пустой список моделей." -ForegroundColor Red
       Write-Host "Нажмите любую клавишу…" -ForegroundColor DarkYellow
       $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
       return $null
     }
 
-    $prov = if ($provSource -in @("nim", "nim-free", "nim-bundled")) { "nim" } elseif ($provSource -in @("groq", "groq-free")) { "groq" } elseif ($provSource -in @("openrouter", "openrouter-free")) { "openrouter" } elseif ($provSource -eq "zai-general") { "zai-general" } else { $provSource }
+    $prov = if ($provSource -eq "nim") { "nim" } elseif ($provSource -eq "groq") { "groq" } elseif ($provSource -eq "openrouter") { "openrouter" } else { $provSource }
     $provLabel = switch ($provSource) {
       "zai" { "Z.AI Coding" }
-      "zai-general" { "Z.AI General" }
       "nim" { "NIM (полный API)" }
-      "nim-free" { "NIM free/preview (стат.)" }
-      "nim-bundled" { "NIM (API ∩ free)" }
       "groq" { "Groq (paid API)" }
-      "groq-free" { "Groq (paid, стат.)" }
       "openrouter" { "OpenRouter (полный API)" }
-      "openrouter-free" { "OpenRouter free (стат.)" }
       default { $provSource.ToUpper() }
     }
 

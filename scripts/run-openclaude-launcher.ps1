@@ -41,6 +41,7 @@ if ([string]$choice.Id -eq "nim-qwen") {
   }
   $env:CLAUDE_CODE_USE_OPENAI = "1"
   $env:OPENAI_API_KEY = $key
+  $env:NVIDIA_API_KEY = $key
   $env:OPENAI_BASE_URL = "https://integrate.api.nvidia.com/v1"
   $env:OPENAI_MODEL = "qwen/qwen3.5-122b-a10b"
 } elseif ([string]$choice.Id -eq "provider") {

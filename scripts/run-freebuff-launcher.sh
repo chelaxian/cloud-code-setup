@@ -43,6 +43,13 @@ main() {
         exit 1
     fi
 
+    if [ -r /proc/cpuinfo ] && ! grep -qi 'avx2' /proc/cpuinfo; then
+        echo -e "${RED}Freebuff binary несовместим с этим CPU/VM: нет AVX2.${RESET}"
+        echo -e "${YELLOW}Это означает SIGILL: бинарник выполняет инструкцию, которую процессор не поддерживает.${RESET}"
+        echo -e "${GRAY}Нужен хост/тариф с AVX2 или сборка Freebuff без AVX2 от авторов.${RESET}"
+        exit 1
+    fi
+
     case "$choice" in
         1) export FREEBUFF_MODEL="deepseek-v4-pro" ;;
         2) export FREEBUFF_MODEL="deepseek-v4-flash" ;;

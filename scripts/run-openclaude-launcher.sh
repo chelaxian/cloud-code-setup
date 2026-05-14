@@ -57,6 +57,7 @@ main() {
         fi
         export CLAUDE_CODE_USE_OPENAI=1
         export OPENAI_API_KEY="$key"
+        export NVIDIA_API_KEY="$key"
         export OPENAI_BASE_URL="https://integrate.api.nvidia.com/v1"
         export OPENAI_MODEL="qwen/qwen3.5-122b-a10b"
     elif [ "$choice" -eq 2 ]; then
