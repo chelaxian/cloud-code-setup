@@ -93,6 +93,8 @@ if [ ! -f "$INSTALLER" ]; then
 fi
 
 chmod +x "$INSTALLER"
+CURRENT_COMMIT="$(cd "$INSTALL_DIR" && git rev-parse --short HEAD 2>/dev/null || true)"
 echo -e "${GREEN}Запуск инсталлятора…${RESET}"
+echo -e "${CYAN}Источник: $INSTALLER ${CURRENT_COMMIT:+($CURRENT_COMMIT)}${RESET}"
 echo ""
 exec bash "$INSTALLER" "$@" < /dev/tty

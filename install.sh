@@ -96,6 +96,14 @@ fi
 
 step "ЧТО УСТАНОВИТЬ?"
 
+if [ -d "$INSTALL_DIR/.git" ]; then
+    current_commit="$(cd "$INSTALL_DIR" && git rev-parse --short HEAD 2>/dev/null || true)"
+    if [ -n "$current_commit" ]; then
+        echo -e "${GRAY}Версия installer: ${current_commit}${RESET}"
+        echo ""
+    fi
+fi
+
 echo -e "  ${GREEN}[1]${RESET} Qwen Code"
 echo -e "  ${GREEN}[2]${RESET} Claude Code"
 echo -e "  ${GREEN}[3]${RESET} OpenCode"
