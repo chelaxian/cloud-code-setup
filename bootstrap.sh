@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # cloud-code-setup — bootstrap (curl | bash)
 # Определяет ОС и запускает нужный инсталлятор
 
@@ -67,12 +67,30 @@ if [ "$PLATFORM" = "windows" ]; then
     exit 0
 fi
 
-# Linux/macOS: скачиваем и запускаем инсталлятор
-INSTALLER="$TMPDIR/install.sh"
-$DL "$REPO_RAW/install.sh" > "$INSTALLER" 2>/dev/null || {
-    echo -e "${RED}Ошибка загрузки install.sh${RESET}"
+# Linux/macOS: обновляем локальный репозиторий и запускаем install.sh уже из него.
+# Так bootstrap не продолжит выполнять устаревший временный installer после git reset.
+INSTALL_DIR="${INSTALL_DIR:-$HOME/cloud-code-setup}"
+REPO_URL="${REPO_URL:-https://github.com/chelaxian/cloud-code-setup.git}"
+
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${CYAN}Обновление локального репозитория…${RESET}"
+    (cd "$INSTALL_DIR" && git fetch origin main && git reset --hard origin/main) || {
+        echo -e "${RED}Не удалось обновить $INSTALL_DIR${RESET}"
+        exit 1
+    }
+else
+    echo -e "${CYAN}Клонирование $REPO_URL → $INSTALL_DIR…${RESET}"
+    git clone "$REPO_URL" "$INSTALL_DIR" || {
+        echo -e "${RED}Ошибка клонирования. Проверьте доступ к $REPO_URL${RESET}"
+        exit 1
+    }
+fi
+
+INSTALLER="$INSTALL_DIR/install.sh"
+if [ ! -f "$INSTALLER" ]; then
+    echo -e "${RED}install.sh не найден: $INSTALLER${RESET}"
     exit 1
-}
+fi
 
 chmod +x "$INSTALLER"
 echo -e "${GREEN}Запуск инсталлятора…${RESET}"
