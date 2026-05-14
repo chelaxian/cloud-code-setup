@@ -96,14 +96,15 @@ fi
 
 step "ЧТО УСТАНОВИТЬ?"
 
-echo -e "  ${GREEN}[1]${RESET} Qwen Code (cloud)"
-echo -e "  ${GREEN}[2]${RESET} Claude Code (cloud)"
-echo -e "  ${GREEN}[3]${RESET} OpenCode (cloud)"
-echo -e "  ${GREEN}[4]${RESET} Все инструменты"
-echo -e "  ${GREEN}[7]${RESET} Freebuff"
-echo -e "  ${GREEN}[8]${RESET} OpenClaude"
-echo -e "  ${CYAN}[5]${RESET} Обновление всех компонентов"
-echo -e "  ${RED}[6]${RESET} Полное удаление (uninstall)"
+echo -e "  ${GREEN}[1]${RESET} Qwen Code"
+echo -e "  ${GREEN}[2]${RESET} Claude Code"
+echo -e "  ${GREEN}[3]${RESET} OpenCode"
+echo ""
+echo -e "  ${GREEN}[4]${RESET} Freebuff"
+echo -e "  ${GREEN}[5]${RESET} OpenClaude"
+echo -e "  ${GREEN}[6]${RESET} Все инструменты"
+echo -e "  ${CYAN}[7]${RESET} Обновление всех компонентов"
+echo -e "  ${RED}[8]${RESET} Полное удаление (uninstall)"
 echo -e "  ${GRAY}[0]${RESET} Выход"
 echo ""
 
@@ -122,11 +123,11 @@ case "$install_choice" in
     1) INSTALL_QWEN=true ;;
     2) INSTALL_CLAUDE=true ;;
     3) INSTALL_OPENCODE=true ;;
-    4) INSTALL_QWEN=true; INSTALL_CLAUDE=true; INSTALL_OPENCODE=true; INSTALL_FREEBUFF=true; INSTALL_OPENCLAUDE=true ;;
-    5) DO_UPDATE=true ;;
-    6) DO_UNINSTALL=true ;;
-    7) INSTALL_FREEBUFF=true ;;
-    8) INSTALL_OPENCLAUDE=true ;;
+    4) INSTALL_FREEBUFF=true ;;
+    5) INSTALL_OPENCLAUDE=true ;;
+    6) INSTALL_QWEN=true; INSTALL_CLAUDE=true; INSTALL_OPENCODE=true; INSTALL_FREEBUFF=true; INSTALL_OPENCLAUDE=true ;;
+    7) DO_UPDATE=true ;;
+    8) DO_UNINSTALL=true ;;
     0) echo -e "${YELLOW}Выход.${RESET}"; exit 0 ;;
     *) warn "Неверный выбор. Устанавливаем все инструменты."; INSTALL_QWEN=true; INSTALL_CLAUDE=true; INSTALL_OPENCODE=true; INSTALL_FREEBUFF=true; INSTALL_OPENCLAUDE=true ;;
 esac

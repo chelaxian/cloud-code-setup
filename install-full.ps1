@@ -172,14 +172,15 @@ Write-Status "==================================================================
 Write-Status "ЧТО УСТАНАВЛИВАЕМ?" "Magenta"
 Write-Status "======================================================================" "Cyan"
 Write-Host ""
-Write-Status "  [1] Qwen Code (cloud)" "Green"
-Write-Status "  [2] Claude Code (cloud)" "Green"
-Write-Status "  [3] OpenCode (cloud)" "Green"
-Write-Status "  [4] Все инструменты" "Green"
-Write-Status "  [7] Freebuff" "Green"
-Write-Status "  [8] OpenClaude" "Green"
-Write-Status "  [5] Обновление всех компонентов" "Green"
-Write-Status "  [6] Полное удаление (uninstall)" "Red"
+Write-Status "  [1] Qwen Code" "Green"
+Write-Status "  [2] Claude Code" "Green"
+Write-Status "  [3] OpenCode" "Green"
+Write-Host ""
+Write-Status "  [4] Freebuff" "Green"
+Write-Status "  [5] OpenClaude" "Green"
+Write-Status "  [6] Все инструменты" "Green"
+Write-Status "  [7] Обновление всех компонентов" "Green"
+Write-Status "  [8] Полное удаление (uninstall)" "Red"
 Write-Status "  [0] Выход" "Gray"
 Write-Host ""
 
@@ -188,7 +189,7 @@ $installChoice = Read-Host "Ваш выбор [4]"
 if ([string]::IsNullOrWhiteSpace($installChoice)) { $installChoice = "4" }
 
 # --- Update all components ---
-if ($installChoice -eq "5") {
+if ($installChoice -eq "7") {
     Write-Host ""
     Write-Status "======================================================================" "Cyan"
     Write-Status "ОБНОВЛЕНИЕ ВСЕХ КОМПОНЕНТОВ" "Magenta"
@@ -296,7 +297,7 @@ if ($installChoice -eq "5") {
 }
 
 # --- Uninstall ---
-if ($installChoice -eq "6") {
+if ($installChoice -eq "8") {
     Write-Host ""
     Write-Status "======================================================================" "Red"
     Write-Status "ПОЛНОЕ УДАЛЕНИЕ" "Red"
@@ -405,9 +406,9 @@ switch ($installChoice) {
     "1" { $installQwen = $true }
     "2" { $installClaude = $true }
     "3" { $installOpenCode = $true }
-    "4" { $installQwen = $true; $installClaude = $true; $installOpenCode = $true; $installFreebuff = $true; $installOpenClaude = $true }
-    "7" { $installFreebuff = $true }
-    "8" { $installOpenClaude = $true }
+    "4" { $installFreebuff = $true }
+    "5" { $installOpenClaude = $true }
+    "6" { $installQwen = $true; $installClaude = $true; $installOpenCode = $true; $installFreebuff = $true; $installOpenClaude = $true }
     "0" { Write-Status "Выход." "Yellow"; return }
     default { Write-Status "Неверный выбор. Устанавливаем все инструменты." "Yellow"; $installQwen = $true; $installClaude = $true; $installOpenCode = $true; $installFreebuff = $true; $installOpenClaude = $true }
 }
